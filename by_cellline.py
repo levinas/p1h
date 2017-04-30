@@ -11,6 +11,7 @@ lib_path = os.path.abspath(file_path)
 sys.path.append(lib_path)
 
 from datasets import nci60
+from regression import regress
 
 
 def main():
@@ -25,7 +26,9 @@ def main():
     y = data[:, 0]
 
     model = RandomForestRegressor()
-    scores = cross_val_score(model, x, y, cv=2)
+    # scores = cross_val_score(model, x, y, cv=2)
+
+    regress(model, x, y, cv=2)
 
 
 if __name__ == '__main__':
