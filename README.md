@@ -2,6 +2,11 @@
 
 Python functions and command line utilities for working with standard pilot1 data sets.
 
+```
+git clone https://github.com/levinas/p1h
+pip install -U pandas scikit-learn xgboost
+```
+
 ### Command-line Examples
 
 Scripts exist for dataframe export and prediciton tasks.
