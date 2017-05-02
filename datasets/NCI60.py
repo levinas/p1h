@@ -419,7 +419,7 @@ def load_by_cell_data(cell='BR:MCF7', drug_features=['descriptors'], shuffle=Tru
 
     if df.shape[0] and verbose:
         print('Loaded {} rows and {} columns'.format(df.shape[0], df.shape[1]))
-        print('Input features:', ', '.join(['{}:{}'.format(k, v) for k, v in input_dims.items()]))
+        print('Input features:', ', '.join(['{}: {}'.format(k, v) for k, v in input_dims.items()]))
         print()
 
     return df
@@ -488,7 +488,7 @@ def load_by_drug_data(drug='1', cell_features=['expression'], shuffle=True,
 
     if df.shape[0] and verbose:
         print('Loaded {} rows and {} columns'.format(df.shape[0], df.shape[1]))
-        print('Input features:', ', '.join(['{}:{}'.format(k, v) for k, v in input_dims.items()]))
+        print('Input features:', ', '.join(['{}: {}'.format(k, v) for k, v in input_dims.items()]))
         print()
 
     return df
