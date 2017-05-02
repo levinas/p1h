@@ -4,27 +4,30 @@ Python functions and command line utilities for working with standard pilot1 dat
 
 ### Command-line Examples
 
-Scripts exist for:
-1. dataframe export
-2. prediciton tasks
+Scripts exist for dataframe export and prediciton tasks.
 
 #### Export by-drug data
 Save molecular features and dose reponse data for given drugs to CSV files:
 ```
-python dataframe.py --by drug --drugs 100071 --feature_subsample 10
+$ python dataframe.py --by drug --drugs 100071 --feature_subsample 10
+
+NSC 100071: saved 52 rows and 11 columns to NSC_100071.csv
 ```
 
 #### Export by-cell data
 Save drug features and dose response data for given cell lines to CSV files:
 ```
-python dataframe.py --by cell --cells BR:MCF7 CNS:U251
+$ python dataframe.py --by cell --cells BR:MCF7 CNS:U251
+
+BR:MCF7: saved 15628 rows and 3811 columns to BR:MCF7.csv
+CNS:U251: saved 28247 rows and 3811 columns to CNS:U251.csv
 ```
 
 #### By-drug regression runs
 Run three regression models on drug 1 using all types of cell line features (expression, miRNA and proteome), and
 save feature importance and model performance evaluated on various metrics to files.
 ```
-python by_drug.py --drugs 1 --models randomforest lasso elasticnet --cell_features all
+$ python by_drug.py --drugs 1 --models randomforest lasso elasticnet --cell_features all
 ```
 
 ### Code Examples
