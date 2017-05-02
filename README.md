@@ -20,7 +20,7 @@ Save drug features and dose response data for given cell lines to CSV files:
 $ python dataframe.py --by cell --cells BR:MCF7 CNS:SF_268
 
 BR:MCF7: saved 15628 rows and 3811 columns to BR:MCF7.csv
-CNS:U251: saved 28247 rows and 3811 columns to CNS:U251.csv
+CNS:SF_268: saved 28151 rows and 3811 columns to CNS:SF_268.csv
 ```
 
 #### By-drug regression runs
