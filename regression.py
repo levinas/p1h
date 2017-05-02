@@ -2,13 +2,17 @@ from __future__ import print_function
 
 import operator
 import os
+import warnings
 import numpy as np
 
 from sklearn import metrics
 from sklearn.model_selection import StratifiedKFold, KFold
 from sklearn.linear_model import *
 from sklearn.ensemble import *
-from xgboost import XGBRegressor
+
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+    from xgboost import XGBRegressor
 
 
 def get_model(model_or_name, threads=-1):
@@ -67,17 +71,15 @@ def sprint_features(top_features, n_top=100):
     return str
 
 
-def regress(model, df, cv=5, threads=-1, prefix=''):
+def regress(model, data, cv=5, threads=-1, prefix=''):
     out_dir = os.path.dirname(prefix)
     if out_dir and not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
     model, name = get_model(model, threads)
-    print(df.shape)
-    data = df.as_matrix()
-    x, y = data[:, 1:], data[:, 0]
-    print(x.shape, y.shape)
-    feature_labels = df.columns.tolist()[1:]
+    mat = data.as_matrix()
+    x, y = mat[:, 1:], mat[:, 0]
+    feature_labels = data.columns.tolist()[1:]
 
     train_scores, test_scores = [], []
     tests, preds = None, None

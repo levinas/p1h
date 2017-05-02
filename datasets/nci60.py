@@ -1,3 +1,4 @@
+import collections
 import os
 import sys
 
@@ -16,6 +17,7 @@ from data_utils import get_file
 
 global_cache = {}
 
+SEED = 2017
 P1B3_URL = 'http://ftp.mcs.anl.gov/pub/candle/public/benchmarks/P1B3/'
 
 
@@ -186,7 +188,7 @@ def all_drugs():
 
 def load_by_cell_data(cell='BR:MCF7', drug_features=['descriptors'], shuffle=True,
                       min_logconc=-5., max_logconc=-4., subsample='naive_balancing',
-                      feature_subsample=None, scaling='std', scramble=False):
+                      feature_subsample=None, scaling='std', scramble=False, verbose=True):
 
     """Load dataframe for by cellline models
 
@@ -201,27 +203,37 @@ def load_by_cell_data(cell='BR:MCF7', drug_features=['descriptors'], shuffle=Tru
     if 'all' in drug_features:
         drug_features = ['descriptors', 'latent']
 
-    df_resp = load_dose_response(fraction=True)
+    df_resp = load_dose_response(subsample=subsample, fraction=True)
 
     df = df_resp[df_resp['CELLNAME'] == cell].reset_index()
     df = df[['NSC', 'GROWTH', 'LOG_CONCENTRATION']]
     df = df.rename(columns={'LOG_CONCENTRATION': 'LCONC'})
-    print(df.shape)
+
+    input_dims = collections.OrderedDict()
+    input_dims['log_conc'] = 1
 
     for fea in drug_features:
         if fea == 'descriptors':
             df_desc = load_drug_descriptors(ncols=feature_subsample, scaling=scaling)
             df = df.merge(df_desc, on='NSC')
+            input_dims['drug_descriptors'] = df_desc.shape[1] - 1
         elif fea == 'latent':
             df_ag = load_drug_autoencoded_AG(ncols=feature_subsample, scaling=scaling)
             df = df.merge(df_ag, on='NSC')
+            input_dims['smiles_latent_AG'] = df_ag.shape[1] - 1
         elif fea == 'noise':
             df_drug_ids = df[['NSC']].drop_duplicates()
             noise = np.random.normal(size=(df_drug_ids.shape[0], 500))
             df_rand = pd.DataFrame(noise, index=df_drug_ids['NSC'],
                                    columns=['RAND-{:03d}'.format(x) for x in range(500)])
             df = df.merge(df_rand, on='NSC')
+            input_dims['drug_noise'] = df_rand.shape[1] - 1
 
     df = df.set_index('NSC')
+
+    if df.shape[0] and verbose:
+        print('Loaded {} rows and {} columns'.format(df.shape[0], df.shape[1]))
+        print('Input features:', ', '.join(['{}:{}'.format(k, v) for k, v in input_dims.items()]))
+        print()
 
     return df
