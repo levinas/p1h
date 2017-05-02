@@ -4,6 +4,8 @@ Python functions and command line utilities for working with standard pilot1 dat
 
 ### Command-line Examples
 
+Scripts exist for (1) dataframe export and (2) prediciton tasks.
+
 #### Export by-drug data
 Save molecular features and dose reponse data for given drugs to CSV files:
 ```
