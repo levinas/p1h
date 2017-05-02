@@ -13,7 +13,7 @@ python dataframe.py --by drug --drugs 100071 --feature_subsample 10
 #### Export by-cell data
 Save drug features and dose response data for given cell lines to CSV files:
 ```
-python dataframe.py --by drug --drugs 100071 --feature_subsample 10
+python dataframe.py --by cell --cells BR:MCF7 CNS:U251
 ```
 
 ### Code Examples
