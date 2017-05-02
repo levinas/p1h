@@ -90,6 +90,13 @@ def sprint_features(top_features, n_top=100):
     return str
 
 
+def discretize(y, bins=4):
+    percentiles = [100 / bins * (i + 1) for i in range(bins - 1)]
+    thresholds = [np.percentile(y, x) for x in percentiles]
+    y_discrete = np.digitize(y, thresholds)
+    return y_discrete, thresholds
+
+
 def regress(model, data, cv=5, threads=-1, prefix=''):
     out_dir = os.path.dirname(prefix)
     if out_dir and not os.path.exists(out_dir):
@@ -103,10 +110,13 @@ def regress(model, data, cv=5, threads=-1, prefix=''):
     train_scores, test_scores = [], []
     tests, preds = None, None
 
+    y_discrete, thresholds = discretize(y, bins=4)
+    print('Quartiles of y:', ['{:.2g}'.format(x) for x in thresholds], end='\n\n')
+
     print('>', name)
     print('Cross validation:')
-    skf = KFold(n_splits=cv, shuffle=True)
-    for i, (train_index, test_index) in enumerate(skf.split(x, y)):
+    skf = StratifiedKFold(n_splits=cv, shuffle=True)
+    for i, (train_index, test_index) in enumerate(skf.split(x, y_discrete)):
         x_train, x_test = x[train_index], x[test_index]
         y_train, y_test = y[train_index], y[test_index]
         model.fit(x_train, y_train)
