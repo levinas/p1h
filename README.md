@@ -20,6 +20,12 @@ Save drug features and dose response data for given cell lines to CSV files:
 python dataframe.py --by cell --cells BR:MCF7 CNS:U251
 ```
 
+#### By-drug regression runs
+```
+python by_drug.py --models lasso elasticnet --cell_features expression mirna
+```
+Feature importance and prediction metrics files will be saved
+
 ### Code Examples
 
 #### Run standard regressions on a drug
