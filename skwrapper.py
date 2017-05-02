@@ -110,15 +110,13 @@ def regress(model, data, cv=5, threads=-1, prefix=''):
     train_scores, test_scores = [], []
     tests, preds = None, None
 
-    # y_discrete, thresholds = discretize(y, bins=4)
-    # print('Quartiles of y:', ['{:.2g}'.format(x) for x in thresholds], end='\n\n')
+    y_discrete, thresholds = discretize(y, bins=4)
+    print('Quartiles of y:', ['{:.2g}'.format(t) for t in thresholds], end='\n\n')
 
     print('>', name)
     print('Cross validation:')
-    # skf = StratifiedKFold(n_splits=cv, shuffle=True)
-    # for i, (train_index, test_index) in enumerate(skf.split(x, y_discrete)):
-    skf = KFold(n_splits=cv, shuffle=True)
-    for i, (train_index, test_index) in enumerate(skf.split(x, y)):
+    skf = StratifiedKFold(n_splits=cv, shuffle=True)
+    for i, (train_index, test_index) in enumerate(skf.split(x, y_discrete)):
         x_train, x_test = x[train_index], x[test_index]
         y_train, y_test = y[train_index], y[test_index]
         model.fit(x_train, y_train)
