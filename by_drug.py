@@ -25,6 +25,11 @@ def main():
     args = parser.parse_args()
 
     print('Args:', args, end='\n\n')
+    if args.use_gi50:
+        print('Use NCI GI50 value instead of percent growth')
+    else:
+        print('Use percent growth at log concentration {}'.format(args.logconc))
+    print()
 
     # cells = NCI60.all_cells() if 'all' in args.cells else args.cells
     drugs = args.drugs
