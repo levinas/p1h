@@ -109,8 +109,9 @@ def regress(model, data, cv=5, threads=-1, prefix=''):
                 scores_file.write(score_format(m, s, eol='\n'))
             except Exception:
                 pass
-    print()
+        scores_file.write('\nModel:\n{}\n\n'.format(model))
 
+    print()
     top_features = top_important_features(model, feature_labels)
     if top_features is not None:
         fea_fname = "{}.{}.features".format(prefix, name)

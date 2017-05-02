@@ -14,8 +14,8 @@ THREADS = -1
 OUT_DIR = '.'
 
 
-def get_parser():
-    parser = argparse.ArgumentParser()
+def get_parser(description=None):
+    parser = argparse.ArgumentParser(description=description)
     parser.add_argument("-c", "--cells", nargs='+', default=CELLS,
                         help="list of cell line names")
     parser.add_argument("-d", "--drug_features", nargs='+', default=DRUG_FEATURES,

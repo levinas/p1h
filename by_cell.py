@@ -1,6 +1,5 @@
 from __future__ import print_function
 
-import argparse
 import os
 
 from datasets import nci60
@@ -21,8 +20,11 @@ def test2():
 
 
 def main():
-    parser = get_parser()
+    description = 'Build ML models to predict by-cellline drug response.'
+    parser = get_parser(description)
     args = parser.parse_args()
+
+    print('Args:', args, end='\n\n')
 
     cells = nci60.all_cells() if 'all' in args.cells else args.cells
 
