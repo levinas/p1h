@@ -7,6 +7,8 @@ import numpy as np
 
 from sklearn import metrics
 from sklearn.model_selection import KFold, StratifiedKFold
+from sklearn.naive_bayes import GaussianNB
+from sklearn.gaussian_process import GaussianProcessClassifier
 from sklearn.linear_model import *
 from sklearn.ensemble import *
 from sklearn.neighbors import *
@@ -23,8 +25,8 @@ def get_model(model_or_name, threads=-1, classification=False):
         'xgboost': (XGBRegressor(nthread=threads), 'XGBRegressor'),
         'randomforest': (RandomForestRegressor(n_estimators=100, n_jobs=threads), 'RandomForestRegressor'),
         'adaboost': (AdaBoostRegressor(), 'AdaBoostRegressor'),
-        'elasticnet': (ElasticNet(), 'ElasticNet'),
         'linear': (LinearRegression(), 'LinearRegression'),
+        'elasticnet': (ElasticNet(), 'ElasticNet'),
         'lasso': (Lasso(), 'Lasso'),
         'ridge': (Ridge(), 'Ridge')
     }
@@ -34,7 +36,9 @@ def get_model(model_or_name, threads=-1, classification=False):
         'randomforest': (RandomForestClassifier(n_estimators=100, n_jobs=threads), 'RandomForestClassifier'),
         'adaboost': (AdaBoostClassifier(), 'AdaBoostClassifier'),
         'logistic': (LogisticRegression(), 'LogisticRegression'),
+        'gaussian': (GaussianProcessClassifier(), 'GaussianProcessClassifier'),
         'knn': (KNeighborsClassifier(), 'KNeighborsClassifier'),
+        'bayes': (GaussianNB(), 'GaussianNB'),
         'svm': (SVC(), 'SVC')
     }
 
@@ -146,6 +150,7 @@ def classify(model, data, cv=5, threads=-1, prefix=''):
 
     train_scores, test_scores = [], []
     tests, preds = None, None
+    probas = None
 
     print('>', name)
     print('Cross validation:')
@@ -160,6 +165,19 @@ def classify(model, data, cv=5, threads=-1, prefix=''):
         y_pred = model.predict(x_test)
         preds = np.concatenate((preds, y_pred)) if preds is not None else y_pred
         tests = np.concatenate((tests, y_test)) if tests is not None else y_test
+        if hasattr(model, "predict_proba"):
+            probas_ = model.fit(x_train, y_train).predict_proba(x_test)
+            probas = np.concatenate((probas, probas_)) if probas is not None else probas_
+
+    roc_auc_core = None
+    if probas is not None:
+        fpr, tpr, thresholds = metrics.roc_curve(tests, probas[:, 1], pos_label=0)
+        roc_auc_score = metrics.auc(fpr, tpr)
+        roc_fname = "{}.{}.ROC".format(prefix, name)
+        with open(roc_fname, "w") as roc_file:
+            roc_file.write('\t'.join(['Threshold', 'FPR', 'TPR'])+'\n')
+            for ent in zip(thresholds, fpr, tpr):
+                roc_file.write('\t'.join("{0:.5f}".format(x) for x in list(ent))+'\n')
 
     print('Average validation metrics:')
     scores_fname = "{}.{}.scores".format(prefix, name)
