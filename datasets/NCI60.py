@@ -240,7 +240,7 @@ def load_cell_proteome(ncols=None, scaling='std'):
 
     df_k = global_cache.get(path2)
     if df_k is None:
-        df_k = pd.read_csv(kinome_path, sep='\t', engine='c')
+        df_k = pd.read_csv(path2, sep='\t', engine='c')
         global_cache[path2] = df_k
 
     df = df.set_index('CellLine')
@@ -418,8 +418,7 @@ def load_by_drug_data(drug='1', cell_features=['expression_5platform'], shuffle=
     df_resp = df_resp.reset_index()
 
     df = df_resp[df_resp['NSC'] == drug]
-    df = df[['CELLNAME', 'GROWTH', 'LOG_CONCENTRATION']]
-    df = df.rename(columns={'LOG_CONCENTRATION': 'LCONC'})
+    df = df[['CELLNAME', 'GROWTH']]
 
     input_dims = collections.OrderedDict()
 
