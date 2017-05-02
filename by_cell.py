@@ -2,20 +2,20 @@ from __future__ import print_function
 
 import os
 
-from datasets import nci60
+from datasets import NCI60
 from regression import regress
 from argparser import get_parser
 
 
 def test1():
-    df = nci60.load_by_cell_data()
+    df = NCI60.load_by_cell_data()
     regress('XGBoost', df)
 
 
 def test2():
     from sklearn.ensemble import RandomForestRegressor
     model = RandomForestRegressor(n_estimators=20)
-    df = nci60.load_by_cell_data()
+    df = NCI60.load_by_cell_data()
     regress(model, df, cv=2)
 
 
@@ -26,11 +26,11 @@ def main():
 
     print('Args:', args, end='\n\n')
 
-    cells = nci60.all_cells() if 'all' in args.cells else args.cells
+    cells = NCI60.all_cells() if 'all' in args.cells else args.cells
 
     for cell in cells:
         print('-' * 10, 'Cell line:', cell, '-' * 10)
-        df = nci60.load_by_cell_data(cell, drug_features=args.drug_features, scaling=args.scaling,
+        df = NCI60.load_by_cell_data(cell, drug_features=args.drug_features, scaling=args.scaling,
                                      min_logconc=args.min_logconc, max_logconc=args.max_logconc,
                                      subsample=args.subsample, feature_subsample=args.feature_subsample)
         if not df.shape[0]:

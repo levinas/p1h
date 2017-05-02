@@ -3,7 +3,7 @@ from __future__ import print_function
 import os
 import sys
 
-from datasets import nci60
+from datasets import NCI60
 from argparser import get_parser
 
 
@@ -24,10 +24,10 @@ if not os.path.exists(args.out_dir):
     os.makedirs(args.out_dir)
 
 if args.by == 'cell':
-    cells = nci60.all_cells() if 'all' in args.cells else args.cells
+    cells = NCI60.all_cells() if 'all' in args.cells else args.cells
     for cell in cells:
         print(cell + ':', end=' ')
-        df = nci60.load_by_cell_data(cell, drug_features=args.drug_features, scaling=args.scaling,
+        df = NCI60.load_by_cell_data(cell, drug_features=args.drug_features, scaling=args.scaling,
                                      min_logconc=args.min_logconc, max_logconc=args.max_logconc,
                                      subsample=args.subsample, feature_subsample=args.feature_subsample,
                                      verbose=False)
