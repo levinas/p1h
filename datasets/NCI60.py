@@ -125,8 +125,6 @@ def load_drug_descriptors(ncols=None, scaling='std'):
 
     df2 = df.drop('NAME', 1)
 
-    # # Filter columns if requested
-
     total = df2.shape[1]
     if ncols and ncols < total:
         usecols = np.random.choice(total, size=ncols, replace=False)
@@ -138,6 +136,135 @@ def load_drug_descriptors(ncols=None, scaling='std'):
     df_dg = pd.concat([df1, df2], axis=1)
 
     return df_dg
+
+
+def load_cell_expression_5platform(ncols=None, scaling='std'):
+    """Load cell line expression data, sub-select columns of gene expression
+        randomly if specificed, scale the selected data and return a
+        pandas dataframe.
+
+    Parameters
+    ----------
+    ncols : int or None
+        number of columns (gene expression) to randomly subselect (default None : use all data)
+    scaling : 'maxabs' [-1,1], 'minmax' [0,1], 'std', or None, optional (default 'std')
+        type of scaling to apply
+    """
+
+    path = get_file(P1B3_URL + 'RNA_5_Platform_Gene_Transcript_Averaged_intensities.transposed.txt')
+
+    df = global_cache.get(path)
+    if df is None:
+        df = pd.read_csv(path, sep='\t', engine='c',
+                         na_values=['na','-',''])
+        global_cache[path] = df
+
+    df1 = df['CellLine']
+    df1 = df1.map(lambda x: x.replace('.', ':'))
+    df1.name = 'CELLNAME'
+
+    df2 = df.drop('CellLine', 1)
+
+    total = df2.shape[1]
+    if ncols and ncols < total:
+        usecols = np.random.choice(total, size=ncols, replace=False)
+        df2 = df2.iloc[:, usecols]
+
+    df2 = impute_and_scale(df2, scaling)
+    df2 = df2.astype(np.float32)
+    df = pd.concat([df1, df2], axis=1)
+
+    return df
+
+
+def load_cell_mirna(ncols=None, scaling='std'):
+    """Load cell line microRNA data, sub-select columns randomly if
+        specificed, scale the selected data and return a pandas
+        dataframe.
+
+    Parameters
+    ----------
+    ncols : int or None
+        number of columns to randomly subselect (default None : use all data)
+    scaling : 'maxabs' [-1,1], 'minmax' [0,1], 'std', or None, optional (default 'std')
+        type of scaling to apply
+
+    """
+    path = get_file(P1B3_URL + 'RNA__microRNA_OSU_V3_chip_log2.transposed.txt')
+
+    df = global_cache.get(path)
+    if df is None:
+        df = pd.read_csv(path, sep='\t', engine='c',
+                         na_values=['na','-',''])
+        global_cache[path] = df
+
+    df1 = df['CellLine']
+    df1 = df1.map(lambda x: x.replace('.', ':'))
+    df1.name = 'CELLNAME'
+
+    df2 = df.drop('CellLine', 1)
+
+    total = df2.shape[1]
+    if ncols and ncols < total:
+        usecols = np.random.choice(total, size=ncols, replace=False)
+        df2 = df2.iloc[:, usecols]
+
+    df2 = impute_and_scale(df2, scaling)
+    df2 = df2.astype(np.float32)
+    df = pd.concat([df1, df2], axis=1)
+
+    return df
+
+
+def load_cell_proteome(ncols=None, scaling='std'):
+    """Load cell line microRNA data, sub-select columns randomly if
+        specificed, scale the selected data and return a pandas
+        dataframe.
+
+    Parameters
+    ----------
+    ncols : int or None
+        number of columns to randomly subselect (default None : use all data)
+    scaling : 'maxabs' [-1,1], 'minmax' [0,1], 'std', or None, optional (default 'std')
+        type of scaling to apply
+
+    """
+
+    path1 = get_file(P1B3_URL + 'nci60_proteome_log2.transposed.tsv')
+    path2 = get_file(P1B3_URL + 'nci60_kinome_log2.transposed.tsv')
+
+    df = global_cache.get(path1)
+    if df is None:
+        df = pd.read_csv(path1, sep='\t', engine='c')
+        global_cache[path1] = df
+
+    df_k = global_cache.get(path2)
+    if df_k is None:
+        df_k = pd.read_csv(kinome_path, sep='\t', engine='c')
+        global_cache[path2] = df_k
+
+    df = df.set_index('CellLine')
+
+    df_k = df_k.set_index('CellLine')
+    df_k = df_k.add_suffix('.K')
+
+    df = df.merge(df_k, left_index=True, right_index=True)
+
+    index = df.index.map(lambda x: x.replace('.', ':'))
+
+    total = df.shape[1]
+    if ncols and ncols < total:
+        usecols = np.random.choice(total, size=ncols, replace=False)
+        df = df.iloc[:, usecols]
+
+    df = impute_and_scale(df, scaling)
+    df = df.astype(np.float32)
+
+    df.index = index
+    df.index.names = ['CELLNAME']
+    df = df.reset_index()
+
+    return df
 
 
 def load_drug_autoencoded_AG(ncols=None, scaling='std'):
@@ -194,10 +321,26 @@ def load_by_cell_data(cell='BR:MCF7', drug_features=['descriptors'], shuffle=Tru
 
     Parameters
     ----------
+    cell: cellline ID
     drug_features: list of strings from 'descriptors', 'latent', 'all', 'noise' (default ['descriptors'])
         use dragon7 descriptors, latent representations from Aspuru-Guzik's SMILES autoencoder
         trained on NSC drugs, or both; use random features if set to noise
-
+    shuffle : True or False, optional (default True)
+        if True shuffles the merged data before splitting training and validation sets
+    scramble: True or False, optional (default False)
+        if True randomly shuffle dose response data as a control
+    min_logconc: float value between -3 and -7, optional (default -5.)
+        min log concentration of drug to return cell line growth
+    max_logconc: float value between -3 and -7, optional (default -4.)
+        max log concentration of drug to return cell line growth
+    feature_subsample: None or integer (default None)
+        number of feature columns to use from cellline expressions and drug descriptors
+    scaling: None, 'std', 'minmax' or 'maxabs' (default 'std')
+        type of feature scaling: 'maxabs' to [-1,1], 'maxabs' to [-1, 1], 'std' for standard normalization
+    subsample: 'naive_balancing' or None
+        if True balance dose response data with crude subsampling
+    scramble: True or False, optional (default False)
+        if True randomly shuffle dose response data as a control
     """
 
     if 'all' in drug_features:
@@ -230,6 +373,71 @@ def load_by_cell_data(cell='BR:MCF7', drug_features=['descriptors'], shuffle=Tru
             input_dims['drug_noise'] = df_rand.shape[1] - 1
 
     df = df.set_index('NSC')
+
+    if df.shape[0] and verbose:
+        print('Loaded {} rows and {} columns'.format(df.shape[0], df.shape[1]))
+        print('Input features:', ', '.join(['{}:{}'.format(k, v) for k, v in input_dims.items()]))
+        print()
+
+    return df
+
+
+def load_by_drug_data(drug='1', cell_features=['expression_5platform'], shuffle=True,
+                      use_gi50=False, logconc=-4., subsample='naive_balancing',
+                      feature_subsample=None, scaling='std', scramble=False, verbose=True):
+
+    """Load dataframe for by drug models
+
+    Parameters
+    ----------
+    drug: drug NSC ID
+    cell_features: list of strings from 'expression_5platform', 'mirna', 'proteome', 'all' (default ['expression_5platform'])
+        use one or more cell line feature sets: gene expression, microRNA, proteome
+    shuffle : True or False, optional (default True)
+        if True shuffles the merged data before splitting training and validation sets
+    scramble: True or False, optional (default False)
+        if True randomly shuffle dose response data as a control
+    use_gi50: True of False, optional (default False)
+        use NCI GI50 value instead of percent growth at log concentration levels
+    logconc: float value between -3 and -7, optional (default -4.)
+        log concentration of drug to return cell line growth
+    feature_subsample: None or integer (default None)
+        number of feature columns to use from cellline expressions and drug descriptors
+    scaling: None, 'std', 'minmax' or 'maxabs' (default 'std')
+        type of feature scaling: 'maxabs' to [-1,1], 'maxabs' to [-1, 1], 'std' for standard normalization
+    subsample: 'naive_balancing' or None
+        if True balance dose response data with crude subsampling
+    scramble: True or False, optional (default False)
+        if True randomly shuffle dose response data as a control
+    """
+
+    if 'all' in cell_features:
+        cell_features = ['expression_5platform', 'mirna', 'proteome']
+
+    df_resp = load_dose_response(subsample=subsample, fraction=True)
+    df_resp = df_resp.reset_index()
+
+    df = df_resp[df_resp['NSC'] == drug]
+    df = df[['CELLNAME', 'GROWTH', 'LOG_CONCENTRATION']]
+    df = df.rename(columns={'LOG_CONCENTRATION': 'LCONC'})
+
+    input_dims = collections.OrderedDict()
+
+    for fea in cell_features:
+        if fea == 'expression_5platform':
+            df_expr_5p = load_cell_expression_5platform(ncols=feature_subsample, scaling=scaling)
+            df = df.merge(df_expr_5p, on='CELLNAME')
+            input_dims['expression_5platform'] = df_expr_5p.shape[1] - 1
+        elif fea == 'mirna':
+            df_mirna = load_cell_mirna(ncols=feature_subsample, scaling=scaling)
+            df = df.merge(df_mirna, on='CELLNAME')
+            input_dims['microRNA'] = df_mirna.shape[1] - 1
+        elif fea == 'proteome':
+            df_prot = load_cell_proteome(ncols=feature_subsample, scaling=scaling)
+            df = df.merge(df_prot, on='CELLNAME')
+            input_dims['proteome'] = df_prot.shape[1] - 1
+
+    df = df.set_index('CELLNAME')
 
     if df.shape[0] and verbose:
         print('Loaded {} rows and {} columns'.format(df.shape[0], df.shape[1]))
