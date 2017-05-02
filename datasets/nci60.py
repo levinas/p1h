@@ -185,8 +185,8 @@ def all_drugs():
 
 
 def load_by_cell_data(cell='BR:MCF7', drug_features=['descriptors'], shuffle=True,
-                          min_logconc=-5., max_logconc=-4., subsample='naive_balancing',
-                          feature_subsample=None, scaling='std', scramble=False):
+                      min_logconc=-5., max_logconc=-4., subsample='naive_balancing',
+                      feature_subsample=None, scaling='std', scramble=False):
 
     """Load dataframe for by cellline models
 
@@ -206,6 +206,7 @@ def load_by_cell_data(cell='BR:MCF7', drug_features=['descriptors'], shuffle=Tru
     df = df_resp[df_resp['CELLNAME'] == cell].reset_index()
     df = df[['NSC', 'GROWTH', 'LOG_CONCENTRATION']]
     df = df.rename(columns={'LOG_CONCENTRATION': 'LCONC'})
+    print(df.shape)
 
     for fea in drug_features:
         if fea == 'descriptors':
@@ -223,8 +224,4 @@ def load_by_cell_data(cell='BR:MCF7', drug_features=['descriptors'], shuffle=Tru
 
     df = df.set_index('NSC')
 
-    data = df.as_matrix()
-    x = data[:, 1:]
-    y = data[:, 0]
-
-    return x, y
+    return df

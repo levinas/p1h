@@ -1,5 +1,7 @@
 from __future__ import print_function
 
+import operator
+import os
 import numpy as np
 
 from sklearn import metrics
@@ -37,8 +39,45 @@ def score_format(metric, score, eol=''):
     return '{:<25} = {:.5f}'.format(metric, score) + eol
 
 
-def regress(model, x, y, cv=5, threads=-1):
+def top_important_features(model, feature_names, n_top=100):
+    if hasattr(model, "booster"): # XGB
+        fscore = model.booster().get_fscore()
+        fscore = sorted(fscore.items(), key=operator.itemgetter(1), reverse=True)
+        features = [(v, feature_names[int(k[1:])]) for k,v in fscore]
+        top = features[:n_top]
+    else:
+        if hasattr(model, "feature_importances_"):
+            fi = model.feature_importances_
+        else:
+            if hasattr(model, "coef_"):
+                fi = model.coef_
+            else:
+                return
+        features = [(f, n) for f, n in zip(fi, feature_names)]
+        top = sorted(features, key=lambda f:abs(f[0]), reverse=True)[:n_top]
+    return top
+
+
+def sprint_features(top_features, n_top=100):
+    str = ''
+    for i, feature in enumerate(top_features):
+        if i >= n_top:
+            break
+        str += '{}\t{:.5f}\n'.format(feature[1], feature[0])
+    return str
+
+
+def regress(model, df, cv=5, threads=-1, prefix=''):
+    out_dir = os.path.dirname(prefix)
+    if out_dir and not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+
     model, name = get_model(model, threads)
+    print(df.shape)
+    data = df.as_matrix()
+    x, y = data[:, 1:], data[:, 0]
+    print(x.shape, y.shape)
+    feature_labels = df.columns.tolist()[1:]
 
     train_scores, test_scores = [], []
     tests, preds = None, None
@@ -53,17 +92,25 @@ def regress(model, x, y, cv=5, threads=-1):
         train_scores.append(model.score(x_train, y_train))
         test_scores.append(model.score(x_test, y_test))
         print("  fold {}/{}: score = {:.3f}".format(i+1, cv, model.score(x_test, y_test)))
-
         y_pred = model.predict(x_test)
         preds = np.concatenate((preds, y_pred)) if preds is not None else y_pred
         tests = np.concatenate((tests, y_test)) if tests is not None else y_test
 
-    metric_names = 'r2_score explained_variance_score mean_absolute_error mean_squared_error'.split()
     print('Average validation metrics:')
-    for m in metric_names:
-        try:
-            s = getattr(metrics, m)(tests, preds)
-            print(' ', score_format(m, s))
-        except Exception:
-            pass
+    scores_fname = "{}.{}.scores".format(prefix, name)
+    metric_names = 'r2_score explained_variance_score mean_absolute_error mean_squared_error'.split()
+    with open(scores_fname, "w") as scores_file:
+        for m in metric_names:
+            try:
+                s = getattr(metrics, m)(tests, preds)
+                print(' ', score_format(m, s))
+                scores_file.write(score_format(m, s, eol='\n'))
+            except Exception:
+                pass
     print()
+
+    top_features = top_important_features(model, feature_labels)
+    if top_features is not None:
+        fea_fname = "{}.{}.features".format(prefix, name)
+        with open(fea_fname, "w") as fea_file:
+            fea_file.write(sprint_features(top_features))

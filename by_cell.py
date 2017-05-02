@@ -1,21 +1,22 @@
 from __future__ import print_function
 
 import argparse
+import os
 
 from datasets import nci60
 from regression import regress
 
 
 def test1():
-    x, y = nci60.load_by_cell_data()
-    regress('XGBoost', x, y)
+    df = nci60.load_by_cell_data()
+    regress('XGBoost', df)
 
 
 def test2():
     from sklearn.ensemble import RandomForestRegressor
     model = RandomForestRegressor(n_estimators=20)
-    x, y = nci60.load_by_cell_data()
-    regress(model, x, y, cv=2)
+    df = nci60.load_by_cell_data()
+    regress(model, df, cv=2)
 
 
 def get_parser():
@@ -43,8 +44,8 @@ def get_parser():
                         help="dose response subsample strategy; 'none' or 'naive_balancing'")
     parser.add_argument("--threads", default=-1,
                         help="number of threads per machine learning training job; -1 for using all threads")
-    parser.add_argument("--out", default='out',
-                        help="output prefix")
+    parser.add_argument("-o", "--out_dir", default='.',
+                        help="output directory")
     return parser
 
 
@@ -56,11 +57,12 @@ def main():
 
     for cell in cells:
         print('-' * 10, 'Cell line:', cell, '-' * 10)
-        x, y = nci60.load_by_cell_data(cell, drug_features=args.drug_features, scaling=args.scaling,
-                                       min_logconc=args.min_logconc, max_logconc=args.max_logconc,
-                                       subsample=args.subsample, feature_subsample=args.feature_subsample)
+        df = nci60.load_by_cell_data(cell, drug_features=args.drug_features, scaling=args.scaling,
+                                     min_logconc=args.min_logconc, max_logconc=args.max_logconc,
+                                     subsample=args.subsample, feature_subsample=args.feature_subsample)
+        print(df.shape)
         for model in args.models:
-            regress(model, x, y, cv=args.cv, threads=args.threads)
+            regress(model, df, cv=args.cv, threads=args.threads, prefix=os.path.join(args.out_dir, cell))
 
 
 if __name__ == '__main__':
