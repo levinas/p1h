@@ -24,9 +24,9 @@ CNS:U251: saved 28247 rows and 3811 columns to CNS:U251.csv
 ```
 
 #### By-drug regression runs
-Run three regression models on drug set A (306 drugs defined by Jason) using all types
-of cell line features (expression, miRNA and proteome), and save feature importance
-and model performance evaluated on various metrics to files.
+Run three regression models on drug set A (defined by Jason to include 306 drugs)
+using all types of cell line features (expression, miRNA and proteome), and save
+feature importance and model performance evaluated on various metrics to files.
 ```
 $ python by_drug.py --drugs A --models randomforest lasso elasticnet --cell_features all
 ```
