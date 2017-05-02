@@ -18,7 +18,7 @@ python dataframe.py --by drug --drugs 100071 --feature_subsample 10
 
 ### Code Examples
 
-#### Run XGBoost regression on a drug
+#### Run standard regressions on a drug
 
 ```
 from datasets import NCI60
@@ -26,6 +26,7 @@ from skwrapper import regress
 
 df = NCI60.load_by_drug_data(drug='100071')
 regress('XGBoost', df)
+regress('Lasso', df)
 ```
 
 #### Sweep customized RandomForest regression on all cell lines
