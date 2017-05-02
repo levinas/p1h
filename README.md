@@ -21,7 +21,7 @@ python dataframe.py --by cell --cells BR:MCF7 CNS:U251
 ```
 
 #### By-drug regression runs
-Run three regression models on drug 1 using three types of cell line features, and
+Run three regression models on drug 1 using all types of cell line features (expression, miRNA and proteome), and
 save feature importance and model performance evaluated on various metrics to files.
 ```
 python by_drug.py --drugs 1 --models randomforest lasso elasticnet --cell_features all
