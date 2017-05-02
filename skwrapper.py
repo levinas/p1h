@@ -115,8 +115,10 @@ def regress(model, data, cv=5, threads=-1, prefix=''):
 
     print('>', name)
     print('Cross validation:')
-    skf = StratifiedKFold(n_splits=cv, shuffle=True)
-    for i, (train_index, test_index) in enumerate(skf.split(x, y_discrete)):
+    # skf = StratifiedKFold(n_splits=cv, shuffle=True)
+    # for i, (train_index, test_index) in enumerate(skf.split(x, y_discrete)):
+    skf = KFold(n_splits=cv, shuffle=True)
+    for i, (train_index, test_index) in enumerate(skf.split(x, y)):
         x_train, x_test = x[train_index], x[test_index]
         y_train, y_test = y[train_index], y[test_index]
         model.fit(x_train, y_train)
