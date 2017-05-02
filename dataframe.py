@@ -38,3 +38,18 @@ if args.by == 'cell':
         else:
             print('no response data found')
             continue
+else:
+    drugs = args.drugs
+    for drug in drugs:
+        print('NSC ' + drug + ':', end=' ')
+        df = NCI60.load_by_drug_data(drug, cell_features=args.cell_features, scaling=args.scaling,
+                                     use_gi50=args.use_gi50, logconc=args.logconc,
+                                     subsample=args.subsample, feature_subsample=args.feature_subsample,
+                                     verbose=False)
+        if df.shape[0]:
+            fname = os.path.join(args.out_dir, 'NSC_' + drug + '.csv')
+            df.to_csv(fname, float_format=args.float_format)
+            print('saved {} rows and {} columns to {}'.format(df.shape[0], df.shape[1], os.path.normpath(fname)))
+        else:
+            print('no response data found')
+            continue

@@ -25,7 +25,6 @@ def main():
     args = parser.parse_args()
 
     print('Args:', args, end='\n\n')
-
     print('Use percent growth for dose levels in log concentration range: [{}, {}]'.format(args.min_logconc, args.max_logconc))
     print()
 
