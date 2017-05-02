@@ -40,7 +40,7 @@ model = RandomForestRegressor(n_estimators=20)
 cells = NCI60.all_cells()
 for cell in cells:
     df = NCI60.load_by_cell_data(cell)
-	regress(model, df, cv=3)
+    regress(model, df, cv=3)
 ```	
 
 
