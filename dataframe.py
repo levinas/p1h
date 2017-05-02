@@ -18,12 +18,13 @@ parser.add_argument("--float_format", default='%.4g',
 args = parser.parse_args()
 
 sys.stdout = sys.stderr
-print('Args:', args, end='\n\n')
+# print('Args:', args, end='\n\n')
 
 if not os.path.exists(args.out_dir):
     os.makedirs(args.out_dir)
 
 if args.by == 'cell':
+    print('Cell features:', args.cell_features)
     cells = NCI60.all_cells() if 'all' in args.cells else args.cells
     for cell in cells:
         print(cell + ':', end=' ')
@@ -39,6 +40,7 @@ if args.by == 'cell':
             print('no response data found')
             continue
 else:
+    print('Drug features:', args.drug_features)
     drugs = args.drugs
     for drug in drugs:
         print('NSC ' + drug + ':', end=' ')
