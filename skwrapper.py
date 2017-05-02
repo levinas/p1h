@@ -110,8 +110,8 @@ def regress(model, data, cv=5, threads=-1, prefix=''):
     train_scores, test_scores = [], []
     tests, preds = None, None
 
-    y_discrete, thresholds = discretize(y, bins=4)
-    print('Quartiles of y:', ['{:.2g}'.format(x) for x in thresholds], end='\n\n')
+    # y_discrete, thresholds = discretize(y, bins=4)
+    # print('Quartiles of y:', ['{:.2g}'.format(x) for x in thresholds], end='\n\n')
 
     print('>', name)
     print('Cross validation:')
