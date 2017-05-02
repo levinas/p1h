@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import os
+import re
 
 from datasets import NCI60
 from skwrapper import regress
@@ -28,12 +29,16 @@ def main():
     if args.use_gi50:
         print('Use NCI GI50 value instead of percent growth')
     else:
-        print('Use percent growth at log concentration {}'.format(args.logconc))
-    print()
+        print('Use percent growth at log concentration: {}'.format(args.logconc))
 
-    # cells = NCI60.all_cells() if 'all' in args.cells else args.cells
     drugs = args.drugs
+    if 'all' in drugs:
+        drugs = NCI60.all_drugs()
+    elif len(drugs) == 1 and re.match("^[ABC]$", drugs[0].upper()):
+        drugs = NCI60.drugs_in_set('Jason:' + drugs[0].upper())
+        print("Drugs in set '{}': {}".format(args.drugs[0], len(drugs)))
 
+    print()
     for drug in drugs:
         print('-' * 10, 'Drug NSC:', drug, '-' * 10)
         df = NCI60.load_by_drug_data(drug, cell_features=args.cell_features, scaling=args.scaling,

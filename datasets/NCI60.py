@@ -349,6 +349,13 @@ def all_drugs():
     return df['NSC'].drop_duplicates().tolist()
 
 
+def drugs_in_set(set_name):
+    path = get_file('http://bioseed.mcs.anl.gov/~fangfang/p1h/NCI60_drug_sets.tsv')
+    df = pd.read_csv(path, sep='\t', engine='c')
+    drugs = df[df['Drug_Set'] == set_name].iloc[0][1].split(',')
+    return drugs
+
+
 def load_by_cell_data(cell='BR:MCF7', drug_features=['descriptors'], shuffle=True,
                       min_logconc=-5., max_logconc=-4., subsample='naive_balancing',
                       feature_subsample=None, scaling='std', scramble=False, verbose=True):
