@@ -3,7 +3,7 @@ import argparse
 
 CELLS = ['BR:MCF7']
 DRUGS = ['1']
-CELL_FEATURES = ['expression_5platform']
+CELL_FEATURES = ['expression']
 DRUG_FEATURES = ['descriptors']
 MODELS = ['XGBoost', 'Ridge', 'RandomForest']
 CV = 5
@@ -20,8 +20,8 @@ OUT_DIR = '.'
 def get_parser(description=None):
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("-c", "--cell_features", nargs='+', default=CELL_FEATURES,
-                        choices=['expression', 'mirna', 'proteome', 'all', 'categorical'],
-                        help="use one or more cell line feature sets: 'expression', 'mirna', 'proteome', 'all'; or use 'categorical' for one-hot encoding of cell lines")
+                        choices=['expression', 'mirna', 'proteome', 'all', 'expression_5platform'],
+                        help="use one or more cell line feature sets: 'expression', 'mirna', 'proteome', 'all'; use all for ['expression', 'mirna', 'proteome']")
     parser.add_argument("-d", "--drug_features", nargs='+', default=DRUG_FEATURES,
                         choices=['descriptors', 'latent', 'all', 'noise'],
                         help="use dragon7 descriptors, latent representations from Aspuru-Guzik's SMILES autoencoder, or both, or random features; 'descriptors','latent', 'all', 'noise'")

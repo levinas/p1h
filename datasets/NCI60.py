@@ -138,10 +138,10 @@ def load_drug_descriptors(ncols=None, scaling='std'):
     return df_dg
 
 
-def load_cell_expression_5platform(ncols=None, scaling='std'):
-    """Load cell line expression data, sub-select columns of gene expression
-        randomly if specificed, scale the selected data and return a
-        pandas dataframe.
+def load_cell_expression_u133p2(ncols=None, scaling='std'):
+    """Load U133_Plus2 cell line expression data prepared by Judith,
+        sub-select columns of gene expression randomly if specificed,
+        scale the selected data and return a pandas dataframe.
 
     Parameters
     ----------
@@ -149,6 +149,42 @@ def load_cell_expression_5platform(ncols=None, scaling='std'):
         number of columns (gene expression) to randomly subselect (default None : use all data)
     scaling : 'maxabs' [-1,1], 'minmax' [0,1], 'std', or None, optional (default 'std')
         type of scaling to apply
+
+    """
+    path = get_file('http://bioseed.mcs.anl.gov/~fangfang/p1h/GSE32474_U133Plus2_GCRMA_gene_median.txt')
+
+    df = global_cache.get(path)
+    if df is None:
+        df = pd.read_csv(path, sep='\t', engine='c')
+        global_cache[path] = df
+
+    df1 = df['CELLNAME']
+    df2 = df.drop('CELLNAME', 1)
+
+    total = df.shape[1]
+    if ncols and ncols < total:
+        usecols = np.random.choice(total, size=ncols, replace=False)
+        df2 = df2.iloc[:, usecols]
+
+    df2 = impute_and_scale(df2, scaling)
+    df2 = df2.astype(np.float32)
+    df = pd.concat([df1, df2], axis=1)
+
+    return df
+
+
+def load_cell_expression_5platform(ncols=None, scaling='std'):
+    """Load 5-platform averaged cell line expression data, sub-select
+        columns of gene expression randomly if specificed, scale the
+        selected data and return a pandas dataframe.
+
+    Parameters
+    ----------
+    ncols : int or None
+        number of columns (gene expression) to randomly subselect (default None : use all data)
+    scaling : 'maxabs' [-1,1], 'minmax' [0,1], 'std', or None, optional (default 'std')
+        type of scaling to apply
+
     """
 
     path = get_file(P1B3_URL + 'RNA_5_Platform_Gene_Transcript_Averaged_intensities.transposed.txt')
@@ -382,7 +418,7 @@ def load_by_cell_data(cell='BR:MCF7', drug_features=['descriptors'], shuffle=Tru
     return df
 
 
-def load_by_drug_data(drug='1', cell_features=['expression_5platform'], shuffle=True,
+def load_by_drug_data(drug='1', cell_features=['expression'], shuffle=True,
                       use_gi50=False, logconc=-4., subsample='naive_balancing',
                       feature_subsample=None, scaling='std', scramble=False, verbose=True):
 
@@ -391,8 +427,9 @@ def load_by_drug_data(drug='1', cell_features=['expression_5platform'], shuffle=
     Parameters
     ----------
     drug: drug NSC ID
-    cell_features: list of strings from 'expression_5platform', 'mirna', 'proteome', 'all' (default ['expression_5platform'])
+    cell_features: list of strings from 'expression', 'expression_5platform', 'mirna', 'proteome', 'all' (default ['expression'])
         use one or more cell line feature sets: gene expression, microRNA, proteome
+        use 'all' for ['expression', 'mirna', 'proteome']
     shuffle : True or False, optional (default True)
         if True shuffles the merged data before splitting training and validation sets
     scramble: True or False, optional (default False)
@@ -412,7 +449,7 @@ def load_by_drug_data(drug='1', cell_features=['expression_5platform'], shuffle=
     """
 
     if 'all' in cell_features:
-        cell_features = ['expression_5platform', 'mirna', 'proteome']
+        cell_features = ['expression', 'mirna', 'proteome']
 
     df_resp = load_dose_response(subsample=subsample, fraction=True)
     df_resp = df_resp.reset_index()
@@ -423,7 +460,11 @@ def load_by_drug_data(drug='1', cell_features=['expression_5platform'], shuffle=
     input_dims = collections.OrderedDict()
 
     for fea in cell_features:
-        if fea == 'expression_5platform':
+        if fea == 'expression' or fea == 'expression_u133p2':
+            df_expr_u133p2 = load_cell_expression_u133p2(ncols=feature_subsample, scaling=scaling)
+            df = df.merge(df_expr_u133p2, on='CELLNAME')
+            input_dims['expression_u133p2'] = df_expr_u133p2.shape[1] - 1
+        elif fea == 'expression_5platform':
             df_expr_5p = load_cell_expression_5platform(ncols=feature_subsample, scaling=scaling)
             df = df.merge(df_expr_5p, on='CELLNAME')
             input_dims['expression_5platform'] = df_expr_5p.shape[1] - 1
