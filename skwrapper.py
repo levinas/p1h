@@ -60,7 +60,7 @@ def get_model(model_or_name, threads=-1, classification=False):
         else:
             model_and_name = regression_models.get(model_or_name.lower())
         if not model_and_name:
-            raise Exception("unrecognized regression model: '{}'".format(model_or_name))
+            raise Exception("unrecognized model: '{}'".format(model_or_name))
         else:
             model, name = model_and_name
     else:
@@ -218,7 +218,7 @@ def classify(model, data, cv=5, cutoffs=None, threads=-1, prefix=''):
     feature_labels = data.columns.tolist()[1:]
 
     if cutoffs:
-        y, _, _ = discretize(y, cutoffs=cutoffs)
+        y, _, _, _ = discretize(y, cutoffs=cutoffs)
 
     mask = np.ones(len(y), dtype=bool)
     bc = np.bincount(y)
