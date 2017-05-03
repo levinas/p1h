@@ -54,8 +54,6 @@ def get_model(model_or_name, threads=-1, classification=False):
         'rf.10k': (RandomForestClassifier(n_estimators=1000, n_jobs=threads), 'RandomForestClassifier.10K')
     }
 
-    avail_text = 'Available regression models
-
     if isinstance(model_or_name, str):
         if classification:
             model_and_name = classification_models.get(model_or_name.lower())
