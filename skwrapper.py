@@ -48,9 +48,9 @@ def get_model(model_or_name, threads=-1, classification=False):
         'svm': (SVC(), 'SVC'),
 
         'xgb.1k': (XGBClassifier(n_estimators=1000, nthread=threads), 'XGBClassifier.1K'),
-        'rf.1k': (RandomForestClassifier(n_estimators=1000, n_jobs=threads), 'RandomForestClassifier.1K')
+        'rf.1k': (RandomForestClassifier(n_estimators=1000, n_jobs=threads), 'RandomForestClassifier.1K'),
         'xgb.10k': (XGBClassifier(n_estimators=1000, nthread=threads), 'XGBClassifier.10K'),
-        'rf.10k': (RandomForestClassifier(n_estimators=1000, n_jobs=threads), 'RandomForestClassifier.10K'),
+        'rf.10k': (RandomForestClassifier(n_estimators=1000, n_jobs=threads), 'RandomForestClassifier.10K')
     }
 
     if isinstance(model_or_name, str):
