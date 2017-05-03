@@ -45,7 +45,7 @@ def main():
                 print('Not enough classes\n')
                 continue
         else:
-            summarize(df, args.cutoffs)
+            summarize(df)
 
         out = os.path.join(args.out_dir, cell)
         for model in args.models:

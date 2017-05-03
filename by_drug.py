@@ -54,7 +54,7 @@ def main():
                 print('Not enough classes\n')
                 continue
         else:
-            summarize(df, args.cutoffs)
+            summarize(df)
 
         out = os.path.join(args.out_dir, 'NSC_' + drug)
         for model in args.models:
