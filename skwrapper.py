@@ -3,6 +3,7 @@ from __future__ import division
 
 import operator
 import os
+import re
 import warnings
 import numpy as np
 
@@ -52,6 +53,8 @@ def get_model(model_or_name, threads=-1, classification=False):
         'xgb.10k': (XGBClassifier(n_estimators=1000, nthread=threads), 'XGBClassifier.10K'),
         'rf.10k': (RandomForestClassifier(n_estimators=1000, n_jobs=threads), 'RandomForestClassifier.10K')
     }
+
+    avail_text = 'Available regression models
 
     if isinstance(model_or_name, str):
         if classification:
