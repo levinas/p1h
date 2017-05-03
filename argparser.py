@@ -32,12 +32,14 @@ def get_parser(description=None):
                         help="list of cell line names")
     parser.add_argument("--drugs", nargs='+', default=DRUGS,
                         help="list of drug NSC IDs")
-    parser.add_argument("--classify",  action="store_true",
-                        help="convert the regression problem into classification based on category cutoffs")
-    parser.add_argument("--cutoffs", nargs='+', type=float, default=CUTOFFS,
-                        help="list of growth cutoffs (between -1 and +1) delineating response categories")
     parser.add_argument("--cv", type=int, default=CV,
                         help="cross validation folds")
+    parser.add_argument("--classify",  action="store_true",
+                        help="convert the regression problem into classification based on category cutoffs")
+    parser.add_argument("--autobins", type=int, default=0,
+                        help="number of evenly distributed bins to make when classification mode is turned on")
+    parser.add_argument("--cutoffs", nargs='+', type=float, default=CUTOFFS,
+                        help="list of growth cutoffs (between -1 and +1) delineating response categories")
     parser.add_argument("--feature_subsample", type=int, default=FEATURE_SUBSAMPLE,
                         help="number of features to randomly sample from each category, 0 means using all features")
     parser.add_argument("--logconc", type=float, default=LOGCONC,

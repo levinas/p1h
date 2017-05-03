@@ -49,7 +49,8 @@ def main():
             continue
 
         if args.classify:
-            good_bins = summarize(df, args.cutoffs, min_count=args.cv)
+            cutoffs = None if args.autobins > 1 else args.cutoffs
+            good_bins = summarize(df, cutoffs, autobins=args.autobins, min_count=args.cv)
             if good_bins < 2:
                 print('Not enough classes\n')
                 continue
@@ -59,7 +60,7 @@ def main():
         out = os.path.join(args.out_dir, 'NSC_' + drug)
         for model in args.models:
             if args.classify:
-                classify(model, df, cv=args.cv, cutoffs=args.cutoffs, threads=args.threads, prefix=out)
+                classify(model, df, cv=args.cv, cutoffs=args.cutoffs, autobins=args.autobins, threads=args.threads, prefix=out)
             else:
                 regress(model, df, cv=args.cv, cutoffs=args.cutoffs, threads=args.threads, prefix=out)
 

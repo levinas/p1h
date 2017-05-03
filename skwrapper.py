@@ -117,7 +117,7 @@ def discretize(y, bins=5, cutoffs=None, min_count=0, verbose=False):
         good_bins = len(bc)
         min_y = np.min(y)
         max_y = np.max(y)
-        print('Category cutoffs: {}'.format(thresholds))
+        print('Category cutoffs:', ['{:.3g}'.format(t) for t in thresholds])
         print('Bin counts:')
         for i, count in enumerate(bc):
             lower = min_y if i == 0 else thresholds[i-1]
@@ -139,15 +139,15 @@ def categorize_dataframe(df, bins=5, cutoffs=None, verbose=False):
     return df
 
 
-def summarize(df, cutoffs=None, min_count=0):
+def summarize(df, cutoffs=None, autobins=0, min_count=0):
     mat = df.as_matrix()
     x, y = mat[:, 1:], mat[:, 0]
     y_discrete, thresholds, _ = discretize(y, bins=4)
     print('Quartiles of y:', ['{:.2g}'.format(t) for t in thresholds])
-    if cutoffs:
-        _, _, good_bins = discretize(y, cutoffs=cutoffs, min_count=min_count, verbose=True)
+    if cutoffs or autobins > 1:
+        _, _, good_bins = discretize(y, bins=autobins, cutoffs=cutoffs, min_count=min_count, verbose=True)
     print()
-    if cutoffs:
+    if good_bins:
         return good_bins
 
 
@@ -207,7 +207,7 @@ def regress(model, data, cv=5, cutoffs=None, threads=-1, prefix=''):
             fea_file.write(sprint_features(top_features))
 
 
-def classify(model, data, cv=5, cutoffs=None, threads=-1, prefix=''):
+def classify(model, data, cv=5, cutoffs=None, autobins=0, threads=-1, prefix=''):
     out_dir = os.path.dirname(prefix)
     if out_dir and not os.path.exists(out_dir):
         os.makedirs(out_dir)
@@ -217,8 +217,10 @@ def classify(model, data, cv=5, cutoffs=None, threads=-1, prefix=''):
     x, y = mat[:, 1:], mat[:, 0]
     feature_labels = data.columns.tolist()[1:]
 
-    if cutoffs:
-        y, _, _, _ = discretize(y, cutoffs=cutoffs)
+    if autobins >= 2:
+        y, cutoffs, _ = discretize(y, bins=autobins, min_count=cv)
+    elif cutoffs:
+        y, _, _ = discretize(y, cutoffs=cutoffs)
 
     mask = np.ones(len(y), dtype=bool)
     bc = np.bincount(y)
