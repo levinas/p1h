@@ -76,7 +76,7 @@ def score_format(metric, score, signed=False, eol=''):
         return '{:<25} =  {:.5f}'.format(metric, score) + eol
 
 
-def top_important_features(model, feature_names, n_top=100):
+def top_important_features(model, feature_names, n_top=1000):
     if hasattr(model, "booster"): # XGB
         fscore = model.booster().get_fscore()
         fscore = sorted(fscore.items(), key=operator.itemgetter(1), reverse=True)
@@ -95,7 +95,7 @@ def top_important_features(model, feature_names, n_top=100):
     return top
 
 
-def sprint_features(top_features, n_top=100):
+def sprint_features(top_features, n_top=1000):
     str = ''
     for i, feature in enumerate(top_features):
         if i >= n_top:
