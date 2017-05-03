@@ -29,7 +29,12 @@ def get_model(model_or_name, threads=-1, classification=False):
         'linear': (LinearRegression(), 'LinearRegression'),
         'elasticnet': (ElasticNetCV(positive=True), 'ElasticNetCV'),
         'lasso': (LassoCV(positive=True), 'LassoCV'),
-        'ridge': (Ridge(), 'Ridge')
+        'ridge': (Ridge(), 'Ridge'),
+
+        'xgb.1k': (XGBRegressor(n_estimators=1000, nthread=threads), 'XGBRegressor.1K'),
+        'rf.1k': (RandomForestRegressor(n_estimators=1000, n_jobs=threads), 'RandomForestRegressor.1K'),
+        'xgb.10k': (XGBRegressor(n_estimators=1000, nthread=threads), 'XGBRegressor.10K'),
+        'rf.10k': (RandomForestRegressor(n_estimators=1000, n_jobs=threads), 'RandomForestRegressor.10K')
     }
 
     classification_models = {
@@ -40,7 +45,12 @@ def get_model(model_or_name, threads=-1, classification=False):
         'gaussian': (GaussianProcessClassifier(), 'GaussianProcessClassifier'),
         'knn': (KNeighborsClassifier(), 'KNeighborsClassifier'),
         'bayes': (GaussianNB(), 'GaussianNB'),
-        'svm': (SVC(), 'SVC')
+        'svm': (SVC(), 'SVC'),
+
+        'xgb.1k': (XGBClassifier(n_estimators=1000, nthread=threads), 'XGBClassifier.1K'),
+        'rf.1k': (RandomForestClassifier(n_estimators=1000, n_jobs=threads), 'RandomForestClassifier.1K')
+        'xgb.10k': (XGBClassifier(n_estimators=1000, nthread=threads), 'XGBClassifier.10K'),
+        'rf.10k': (RandomForestClassifier(n_estimators=1000, n_jobs=threads), 'RandomForestClassifier.10K'),
     }
 
     if isinstance(model_or_name, str):
