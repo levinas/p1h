@@ -86,18 +86,25 @@ def sprint_features(top_features, n_top=100):
     for i, feature in enumerate(top_features):
         if i >= n_top:
             break
-        str += '{}\t{:.5f}\n'.format(feature[1], feature[0])
+        str += '{:9.5f}\t{}\n'.format(feature[0], feature[1])
     return str
 
 
-def discretize(y, bins=4):
+def discretize(y, bins=5):
     percentiles = [100 / bins * (i + 1) for i in range(bins - 1)]
     thresholds = [np.percentile(y, x) for x in percentiles]
     y_discrete = np.digitize(y, thresholds)
     return y_discrete, thresholds
 
 
-def regress(model, data, cv=5, threads=-1, prefix=''):
+def summarize(df):
+    mat = df.as_matrix()
+    x, y = mat[:, 1:], mat[:, 0]
+    y_discrete, thresholds = discretize(y, bins=4)
+    print('Quartiles of y:', ['{:.2g}'.format(t) for t in thresholds], end='\n\n')
+
+
+def regress(model, data, cv=5, cutoffs=None, threads=-1, prefix=''):
     out_dir = os.path.dirname(prefix)
     if out_dir and not os.path.exists(out_dir):
         os.makedirs(out_dir)
@@ -109,9 +116,10 @@ def regress(model, data, cv=5, threads=-1, prefix=''):
 
     train_scores, test_scores = [], []
     tests, preds = None, None
+    best_model = None
+    best_score = -np.Inf
 
-    y_discrete, thresholds = discretize(y, bins=4)
-    print('Quartiles of y:', ['{:.2g}'.format(t) for t in thresholds], end='\n\n')
+    y_discrete, thresholds = discretize(y)
 
     print('>', name)
     print('Cross validation:')
@@ -120,9 +128,13 @@ def regress(model, data, cv=5, threads=-1, prefix=''):
         x_train, x_test = x[train_index], x[test_index]
         y_train, y_test = y[train_index], y[test_index]
         model.fit(x_train, y_train)
-        train_scores.append(model.score(x_train, y_train))
-        test_scores.append(model.score(x_test, y_test))
-        print("  fold {}/{}: score = {:.3f}".format(i+1, cv, model.score(x_test, y_test)))
+        train_score = model.score(x_train, y_train)
+        test_score = model.score(x_test, y_test)
+        train_scores.append(train_score)
+        test_scores.append(test_score)
+        print("  fold {}/{}: score = {:.3f}".format(i+1, cv, test_score))
+        if test_score > best_score:
+            best_model = model
         y_pred = model.predict(x_test)
         preds = np.concatenate((preds, y_pred)) if preds is not None else y_pred
         tests = np.concatenate((tests, y_test)) if tests is not None else y_test
@@ -141,14 +153,14 @@ def regress(model, data, cv=5, threads=-1, prefix=''):
         scores_file.write('\nModel:\n{}\n\n'.format(model))
 
     print()
-    top_features = top_important_features(model, feature_labels)
+    top_features = top_important_features(best_model, feature_labels)
     if top_features is not None:
         fea_fname = "{}.{}.features".format(prefix, name)
         with open(fea_fname, "w") as fea_file:
             fea_file.write(sprint_features(top_features))
 
 
-def classify(model, data, cv=5, threads=-1, prefix=''):
+def classify(model, data, cv=5, cutoffs=None, threads=-1, prefix=''):
     out_dir = os.path.dirname(prefix)
     if out_dir and not os.path.exists(out_dir):
         os.makedirs(out_dir)
@@ -157,6 +169,8 @@ def classify(model, data, cv=5, threads=-1, prefix=''):
     mat = data.as_matrix()
     x, y = mat[:, 1:], mat[:, 0]
     feature_labels = data.columns.tolist()[1:]
+    if cutoffs:
+        y = np.digitize(y, cutoffs)
 
     train_scores, test_scores = [], []
     tests, preds = None, None

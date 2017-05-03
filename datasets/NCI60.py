@@ -100,7 +100,7 @@ def load_dose_response(min_logconc=-5., max_logconc=-5., subsample=None, fractio
     return df
 
 
-def load_drug_descriptors(ncols=None, scaling='std'):
+def load_drug_descriptors(ncols=None, scaling='std', add_prefix=True):
     """Load drug descriptor data, sub-select columns of drugs descriptors
         randomly if specificed, impute and scale the selected data, and return a
         pandas dataframe.
@@ -111,6 +111,8 @@ def load_drug_descriptors(ncols=None, scaling='std'):
         number of columns (drugs descriptors) to randomly subselect (default None : use all data)
     scaling : 'maxabs' [-1,1], 'minmax' [0,1], 'std', or None, optional (default 'std')
         type of scaling to apply
+    add_prefix: True or False
+        add feature namespace prefix
     """
 
     path = get_file(P1B3_URL + 'descriptors.2D-NSC.5dose.filtered.txt')
@@ -126,6 +128,8 @@ def load_drug_descriptors(ncols=None, scaling='std'):
     df1.rename(columns={'NAME': 'NSC'}, inplace=True)
 
     df2 = df.drop('NAME', 1)
+    if add_prefix:
+        df2 = df2.add_prefix('dragon7.')
 
     total = df2.shape[1]
     if ncols and ncols < total:
@@ -140,7 +144,7 @@ def load_drug_descriptors(ncols=None, scaling='std'):
     return df_dg
 
 
-def load_cell_expression_u133p2(ncols=None, scaling='std'):
+def load_cell_expression_u133p2(ncols=None, scaling='std', add_prefix=True):
     """Load U133_Plus2 cell line expression data prepared by Judith,
         sub-select columns of gene expression randomly if specificed,
         scale the selected data and return a pandas dataframe.
@@ -151,7 +155,8 @@ def load_cell_expression_u133p2(ncols=None, scaling='std'):
         number of columns (gene expression) to randomly subselect (default None : use all data)
     scaling : 'maxabs' [-1,1], 'minmax' [0,1], 'std', or None, optional (default 'std')
         type of scaling to apply
-
+    add_prefix: True or False
+        add feature namespace prefix
     """
     path = get_file('http://bioseed.mcs.anl.gov/~fangfang/p1h/GSE32474_U133Plus2_GCRMA_gene_median.txt')
 
@@ -162,6 +167,8 @@ def load_cell_expression_u133p2(ncols=None, scaling='std'):
 
     df1 = df['CELLNAME']
     df2 = df.drop('CELLNAME', 1)
+    if add_prefix:
+        df2 = df2.add_prefix('expr.')
 
     total = df.shape[1]
     if ncols and ncols < total:
@@ -175,7 +182,7 @@ def load_cell_expression_u133p2(ncols=None, scaling='std'):
     return df
 
 
-def load_cell_expression_5platform(ncols=None, scaling='std'):
+def load_cell_expression_5platform(ncols=None, scaling='std', add_prefix=True):
     """Load 5-platform averaged cell line expression data, sub-select
         columns of gene expression randomly if specificed, scale the
         selected data and return a pandas dataframe.
@@ -186,7 +193,8 @@ def load_cell_expression_5platform(ncols=None, scaling='std'):
         number of columns (gene expression) to randomly subselect (default None : use all data)
     scaling : 'maxabs' [-1,1], 'minmax' [0,1], 'std', or None, optional (default 'std')
         type of scaling to apply
-
+    add_prefix: True or False
+        add feature namespace prefix
     """
 
     path = get_file(P1B3_URL + 'RNA_5_Platform_Gene_Transcript_Averaged_intensities.transposed.txt')
@@ -202,6 +210,8 @@ def load_cell_expression_5platform(ncols=None, scaling='std'):
     df1.name = 'CELLNAME'
 
     df2 = df.drop('CellLine', 1)
+    if add_prefix:
+        df2 = df2.add_prefix('expr_5p.')
 
     total = df2.shape[1]
     if ncols and ncols < total:
@@ -215,7 +225,7 @@ def load_cell_expression_5platform(ncols=None, scaling='std'):
     return df
 
 
-def load_cell_mirna(ncols=None, scaling='std'):
+def load_cell_mirna(ncols=None, scaling='std', add_prefix=True):
     """Load cell line microRNA data, sub-select columns randomly if
         specificed, scale the selected data and return a pandas
         dataframe.
@@ -226,7 +236,8 @@ def load_cell_mirna(ncols=None, scaling='std'):
         number of columns to randomly subselect (default None : use all data)
     scaling : 'maxabs' [-1,1], 'minmax' [0,1], 'std', or None, optional (default 'std')
         type of scaling to apply
-
+    add_prefix: True or False
+        add feature namespace prefix
     """
     path = get_file(P1B3_URL + 'RNA__microRNA_OSU_V3_chip_log2.transposed.txt')
 
@@ -241,6 +252,8 @@ def load_cell_mirna(ncols=None, scaling='std'):
     df1.name = 'CELLNAME'
 
     df2 = df.drop('CellLine', 1)
+    if add_prefix:
+        df2 = df2.add_prefix('mRNA.')
 
     total = df2.shape[1]
     if ncols and ncols < total:
@@ -254,7 +267,7 @@ def load_cell_mirna(ncols=None, scaling='std'):
     return df
 
 
-def load_cell_proteome(ncols=None, scaling='std'):
+def load_cell_proteome(ncols=None, scaling='std', add_prefix=True):
     """Load cell line microRNA data, sub-select columns randomly if
         specificed, scale the selected data and return a pandas
         dataframe.
@@ -265,7 +278,8 @@ def load_cell_proteome(ncols=None, scaling='std'):
         number of columns to randomly subselect (default None : use all data)
     scaling : 'maxabs' [-1,1], 'minmax' [0,1], 'std', or None, optional (default 'std')
         type of scaling to apply
-
+    add_prefix: True or False
+        add feature namespace prefix
     """
 
     path1 = get_file(P1B3_URL + 'nci60_proteome_log2.transposed.tsv')
@@ -282,9 +296,13 @@ def load_cell_proteome(ncols=None, scaling='std'):
         global_cache[path2] = df_k
 
     df = df.set_index('CellLine')
-
     df_k = df_k.set_index('CellLine')
-    df_k = df_k.add_suffix('.K')
+
+    if add_prefix:
+        df = df.add_prefix('prot.')
+        df_k = df_k.add_prefix('kino.')
+    else:
+        df_k = df_k.add_suffix('.K')
 
     df = df.merge(df_k, left_index=True, right_index=True)
 
@@ -305,7 +323,7 @@ def load_cell_proteome(ncols=None, scaling='std'):
     return df
 
 
-def load_drug_autoencoded_AG(ncols=None, scaling='std'):
+def load_drug_autoencoded_AG(ncols=None, scaling='std', add_prefix=True):
     """Load drug latent representation from Aspuru-Guzik's variational
     autoencoder, sub-select columns of drugs randomly if specificed,
     impute and scale the selected data, and return a pandas dataframe
@@ -316,7 +334,8 @@ def load_drug_autoencoded_AG(ncols=None, scaling='std'):
         number of columns (drug latent representations) to randomly subselect (default None : use all data)
     scaling : 'maxabs' [-1,1], 'minmax' [0,1], 'std', or None, optional (default 'std')
         type of scaling to apply
-
+    add_prefix: True or False
+        add feature namespace prefix
     """
     path = get_file(P1B3_URL + 'Aspuru-Guzik_NSC_latent_representation_292D.csv')
 
@@ -327,6 +346,8 @@ def load_drug_autoencoded_AG(ncols=None, scaling='std'):
 
     df1 = pd.DataFrame(df.loc[:, 'NSC'].astype(int).astype(str))
     df2 = df.drop('NSC', 1)
+    if add_prefix:
+        df2 = df2.add_prefix('smiles_latent_AG.')
 
     total = df2.shape[1]
     if ncols and ncols < total:
@@ -422,7 +443,6 @@ def load_by_cell_data(cell='BR:MCF7', drug_features=['descriptors'], shuffle=Tru
     if df.shape[0] and verbose:
         print('Loaded {} rows and {} columns'.format(df.shape[0], df.shape[1]))
         print('Input features:', ', '.join(['{}: {}'.format(k, v) for k, v in input_dims.items()]))
-        print()
 
     return df
 
@@ -491,6 +511,5 @@ def load_by_drug_data(drug='1', cell_features=['expression'], shuffle=True,
     if df.shape[0] and verbose:
         print('Loaded {} rows and {} columns'.format(df.shape[0], df.shape[1]))
         print('Input features:', ', '.join(['{}: {}'.format(k, v) for k, v in input_dims.items()]))
-        print()
 
     return df

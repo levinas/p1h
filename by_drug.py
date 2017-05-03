@@ -4,8 +4,8 @@ import os
 import re
 
 from datasets import NCI60
-from skwrapper import regress
 from argparser import get_parser
+from skwrapper import regress, classify, summarize
 
 
 def test1():
@@ -47,8 +47,13 @@ def main():
         if not df.shape[0]:
             print('No response data found')
             continue
+        summarize(df)
+        prefix = os.path.join(args.out_dir, 'NSC_' + drug)
         for model in args.models:
-            regress(model, df, cv=args.cv, threads=args.threads, prefix=os.path.join(args.out_dir, 'NSC_' + drug))
+            if args.classify:
+                classify(model, df, cv=args.cv, cutoffs=args.category_cutoffs, threads=args.threads, prefix=prefix)
+            else:
+                regress(model, df, cv=args.cv, cutoffs=args.category_cutoffs, threads=args.threads, prefix=prefix)
 
 
 if __name__ == '__main__':
