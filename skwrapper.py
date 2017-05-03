@@ -241,22 +241,21 @@ def classify(model, data, cv=5, cutoffs=None, threads=-1, prefix=''):
         preds = np.concatenate((preds, y_pred)) if preds is not None else y_pred
         tests = np.concatenate((tests, y_test)) if tests is not None else y_test
         if hasattr(model, "predict_proba"):
-            probas_ = model.fit(x_train, y_train).predict_proba(x_test)
+            probas_ = model.predict_proba(x_test)
             probas = np.concatenate((probas, probas_)) if probas is not None else probas_
 
-    roc_auc_core = None
+    roc_auc_score = None
     if probas is not None:
         fpr, tpr, thresholds = metrics.roc_curve(tests, probas[:, 1], pos_label=0)
         roc_auc_score = metrics.auc(fpr, tpr)
-        if roc_auc_core:
-            roc_fname = "{}.{}.ROC".format(prefix, name)
+        roc_fname = "{}.{}.ROC".format(prefix, name)
+        if roc_auc_score:
             with open(roc_fname, "w") as roc_file:
                 roc_file.write('\t'.join(['Threshold', 'FPR', 'TPR'])+'\n')
                 for ent in zip(thresholds, fpr, tpr):
                     roc_file.write('\t'.join("{0:.5f}".format(x) for x in list(ent))+'\n')
 
     print('Average validation metrics:')
-
     naive_accuracy = max(np.bincount(tests)) / len(tests)
     accuracy = np.sum(preds == tests) / len(tests)
     accuracy_gain = accuracy - naive_accuracy
@@ -272,6 +271,9 @@ def classify(model, data, cv=5, cutoffs=None, threads=-1, prefix=''):
                 scores_file.write(score_format(m, s, eol='\n'))
             except Exception:
                 pass
+        if roc_auc_score:
+            print(' ', score_format('roc_auc_score', roc_auc_score))
+            scores_file.write(score_format('roc_auc_score', roc_auc_score, eol='\n'))
         scores_file.write('\nModel:\n{}\n\n'.format(model))
 
     print()
