@@ -15,9 +15,6 @@ from sklearn.neighbors import *
 from sklearn.svm import *
 
 with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    from sklearn.exceptions import UndefinedMetricWarning
-    warnings.filterwarnings("ignore", category=UndefinedMetricWarning)
     warnings.filterwarnings("ignore", category=DeprecationWarning)
     from xgboost import XGBRegressor
     from xgboost import XGBClassifier
@@ -29,8 +26,8 @@ def get_model(model_or_name, threads=-1, classification=False):
         'randomforest': (RandomForestRegressor(n_estimators=100, n_jobs=threads), 'RandomForestRegressor'),
         'adaboost': (AdaBoostRegressor(), 'AdaBoostRegressor'),
         'linear': (LinearRegression(), 'LinearRegression'),
-        'elasticnet': (ElasticNet(), 'ElasticNet'),
-        'lasso': (Lasso(), 'Lasso'),
+        'elasticnet': (ElasticNetCV(positive=True), 'ElasticNetCV'),
+        'lasso': (LassoCV(positive=True), 'LassoCV'),
         'ridge': (Ridge(), 'Ridge')
     }
 
@@ -61,8 +58,11 @@ def get_model(model_or_name, threads=-1, classification=False):
     return model, name
 
 
-def score_format(metric, score, eol=''):
-    return '{:<25} = {:.5f}'.format(metric, score) + eol
+def score_format(metric, score, signed=False, eol=''):
+    if signed:
+        return '{:<25} = {:+.5f}'.format(metric, score) + eol
+    else:
+        return '{:<25} =  {:.5f}'.format(metric, score) + eol
 
 
 def top_important_features(model, feature_names, n_top=100):
@@ -93,7 +93,7 @@ def sprint_features(top_features, n_top=100):
     return str
 
 
-def discretize(y, bins=5, cutoffs=None, verbose=False):
+def discretize(y, bins=5, cutoffs=None, min_count=0, verbose=False):
     thresholds = cutoffs
     if thresholds is None:
         percentiles = [100 / bins * (i + 1) for i in range(bins - 1)]
@@ -103,12 +103,14 @@ def discretize(y, bins=5, cutoffs=None, verbose=False):
         bc = np.bincount(classes)
         min_y = np.min(y)
         max_y = np.max(y)
+        print('Category cutoffs: {}'.format(thresholds))
         print('Bin counts:')
         for i, count in enumerate(bc):
             lower = min_y if i == 0 else thresholds[i-1]
             upper = max_y if i == len(bc)-1 else thresholds[i]
-            print('  Class {}: {:7d} ({:.4f}) - between {:+.2f} and {:+.2f}'.
-                  format(i, count, count/len(y), lower, upper))
+            removed = 'removed (<{})'.format(min_count) if count < min_count else ''
+            print('  Class {}: {:7d} ({:.4f}) - between {:+.2f} and {:+.2f} {}'.
+                  format(i, count, count/len(y), lower, upper, removed))
         # print('  Total: {:9d}'.format(len(y)))
         print()
     return classes, thresholds
@@ -121,11 +123,13 @@ def categorize_dataframe(df, bins=5, cutoffs=None, verbose=False):
     return df
 
 
-def summarize(df):
+def summarize(df, cutoffs=None, min_count=0):
     mat = df.as_matrix()
     x, y = mat[:, 1:], mat[:, 0]
     y_discrete, thresholds = discretize(y, bins=4)
-    print('Quartiles of y:', ['{:.2g}'.format(t) for t in thresholds], end='\n\n')
+    print('Quartiles of y:', ['{:.2g}'.format(t) for t in thresholds])
+    if cutoffs:
+        discretize(y, cutoffs=cutoffs, min_count=min_count, verbose=True)
 
 
 def regress(model, data, cv=5, cutoffs=None, threads=-1, prefix=''):
@@ -143,12 +147,12 @@ def regress(model, data, cv=5, cutoffs=None, threads=-1, prefix=''):
     best_model = None
     best_score = -np.Inf
 
-    y_discrete, _ = discretize(y)
+    y_even, _ = discretize(y)
 
     print('>', name)
     print('Cross validation:')
     skf = StratifiedKFold(n_splits=cv, shuffle=True)
-    for i, (train_index, test_index) in enumerate(skf.split(x, y_discrete)):
+    for i, (train_index, test_index) in enumerate(skf.split(x, y_even)):
         x_train, x_test = x[train_index], x[test_index]
         y_train, y_test = y[train_index], y[test_index]
         model.fit(x_train, y_train)
@@ -195,11 +199,21 @@ def classify(model, data, cv=5, cutoffs=None, threads=-1, prefix=''):
     feature_labels = data.columns.tolist()[1:]
 
     if cutoffs:
-        y, _ = discretize(y, cutoffs=cutoffs, verbose=True)
+        y, _ = discretize(y, cutoffs=cutoffs)
+
+    mask = np.ones(len(y), dtype=bool)
+    bc = np.bincount(y)
+    for i, count in enumerate(bc):
+        if count < cv:
+            mask[y == i] = False
+    x = x[mask]
+    y = y[mask]
 
     train_scores, test_scores = [], []
     tests, preds = None, None
     probas = None
+    best_model = None
+    best_score = -np.Inf
 
     print('>', name)
     print('Cross validation:')
@@ -208,9 +222,13 @@ def classify(model, data, cv=5, cutoffs=None, threads=-1, prefix=''):
         x_train, x_test = x[train_index], x[test_index]
         y_train, y_test = y[train_index], y[test_index]
         model.fit(x_train, y_train)
-        train_scores.append(model.score(x_train, y_train))
-        test_scores.append(model.score(x_test, y_test))
-        print("  fold {}/{}: score = {:.3f}".format(i+1, cv, model.score(x_test, y_test)))
+        train_score = model.score(x_train, y_train)
+        test_score = model.score(x_test, y_test)
+        train_scores.append(train_score)
+        test_scores.append(test_score)
+        print("  fold {}/{}: score = {:.3f}".format(i+1, cv, test_score))
+        if test_score > best_score:
+            best_model = model
         y_pred = model.predict(x_test)
         preds = np.concatenate((preds, y_pred)) if preds is not None else y_pred
         tests = np.concatenate((tests, y_test)) if tests is not None else y_test
@@ -222,27 +240,34 @@ def classify(model, data, cv=5, cutoffs=None, threads=-1, prefix=''):
     if probas is not None:
         fpr, tpr, thresholds = metrics.roc_curve(tests, probas[:, 1], pos_label=0)
         roc_auc_score = metrics.auc(fpr, tpr)
-        roc_fname = "{}.{}.ROC".format(prefix, name)
-        with open(roc_fname, "w") as roc_file:
-            roc_file.write('\t'.join(['Threshold', 'FPR', 'TPR'])+'\n')
-            for ent in zip(thresholds, fpr, tpr):
-                roc_file.write('\t'.join("{0:.5f}".format(x) for x in list(ent))+'\n')
+        if roc_auc_core:
+            roc_fname = "{}.{}.ROC".format(prefix, name)
+            with open(roc_fname, "w") as roc_file:
+                roc_file.write('\t'.join(['Threshold', 'FPR', 'TPR'])+'\n')
+                for ent in zip(thresholds, fpr, tpr):
+                    roc_file.write('\t'.join("{0:.5f}".format(x) for x in list(ent))+'\n')
 
     print('Average validation metrics:')
+
+    naive_accuracy = max(np.bincount(tests)) / len(tests)
+    accuracy = np.sum(preds == tests) / len(tests)
+    accuracy_gain = accuracy - naive_accuracy
+    print(' ', score_format('accuracy_gain', accuracy_gain, signed=True))
     scores_fname = "{}.{}.scores".format(prefix, name)
     metric_names = 'accuracy_score f1_score precision_score recall_score log_loss'.split()
     with open(scores_fname, "w") as scores_file:
+        scores_file.write(score_format('accuracy_gain', accuracy_gain, eol='\n'))
         for m in metric_names:
             try:
                 s = getattr(metrics, m)(tests, preds)
                 print(' ', score_format(m, s))
-                scores_file.write(score_format(m, s, eol='\n'))
+                scores_file.write(score_format(m, s, signed=True, eol='\n'))
             except Exception:
                 pass
         scores_file.write('\nModel:\n{}\n\n'.format(model))
 
     print()
-    top_features = top_important_features(model, feature_labels)
+    top_features = top_important_features(best_model, feature_labels)
     if top_features is not None:
         fea_fname = "{}.{}.features".format(prefix, name)
         with open(fea_fname, "w") as fea_file:

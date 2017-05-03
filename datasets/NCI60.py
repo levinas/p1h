@@ -480,7 +480,7 @@ def load_by_drug_data(drug='1', cell_features=['expression'], shuffle=True,
     if 'all' in cell_features:
         cell_features = ['expression', 'mirna', 'proteome']
 
-    df_resp = load_dose_response(subsample=subsample, fraction=True)
+    df_resp = load_dose_response(subsample=subsample, min_logconc=logconc, max_logconc=logconc, fraction=True)
     df_resp = df_resp.reset_index()
 
     df = df_resp[df_resp['NSC'] == drug]

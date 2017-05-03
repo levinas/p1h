@@ -48,7 +48,7 @@ def main():
             print('No response data found')
             continue
 
-        summarize(df)
+        summarize(df, args.cutoffs, min_count=args.cv)
         out = os.path.join(args.out_dir, 'NSC_' + drug)
         for model in args.models:
             if args.classify:
