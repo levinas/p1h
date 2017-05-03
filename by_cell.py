@@ -3,8 +3,8 @@ from __future__ import print_function
 import os
 
 from datasets import NCI60
-from skwrapper import regress
 from argparser import get_parser
+from skwrapper import regress, classify, summarize
 
 
 def test1():
