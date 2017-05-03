@@ -27,7 +27,7 @@ def get_parser(description=None):
                         choices=['descriptors', 'latent', 'all', 'noise'],
                         help="use dragon7 descriptors, latent representations from Aspuru-Guzik's SMILES autoencoder, or both, or random features; 'descriptors','latent', 'all', 'noise'")
     parser.add_argument("-m", "--models", nargs='+', default=MODELS,
-                        help="list of regression models: XGBoost, RandomForest, AdaBoost, Linear, ElasticNet, Lasso, Ridge; or list of classification models: XGBoost, RandomForest, AdaBoost, Logistic, Gaussian, Bayes, KNN, SVM")
+                        help="list of regression models: XGBoost, XGB.1K, XGB.10K, RandomForest, RF.1K, RF.10K, AdaBoost, Linear, ElasticNet, Lasso, Ridge; or list of classification models: XGBoost, XGB.1K, XGB.10K, RandomForest, RF.1K, RF.10K, AdaBoost, Logistic, Gaussian, Bayes, KNN, SVM")
     parser.add_argument("--cells", nargs='+', default=CELLS,
                         help="list of cell line names")
     parser.add_argument("--drugs", nargs='+', default=DRUGS,
