@@ -144,11 +144,11 @@ def summarize(df, cutoffs=None, autobins=0, min_count=0):
     x, y = mat[:, 1:], mat[:, 0]
     y_discrete, thresholds, _ = discretize(y, bins=4)
     print('Quartiles of y:', ['{:.2g}'.format(t) for t in thresholds])
+    good_bins = None
     if cutoffs or autobins > 1:
         _, _, good_bins = discretize(y, bins=autobins, cutoffs=cutoffs, min_count=min_count, verbose=True)
     print()
-    if good_bins:
-        return good_bins
+    return good_bins
 
 
 def regress(model, data, cv=5, cutoffs=None, threads=-1, prefix=''):
