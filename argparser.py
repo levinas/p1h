@@ -5,8 +5,8 @@ CELLS = ['BR:MCF7']
 DRUGS = ['1']
 CELL_FEATURES = ['expression']
 DRUG_FEATURES = ['descriptors']
-MODELS = ['XGBoost', 'Ridge', 'RandomForest']
-CATEGORY_CUTOFFS = [-0.25, 0.25]
+MODELS = ['XGBoost', 'RandomForest']
+CUTOFFS = [-0.50, 0.25]
 CV = 5
 FEATURE_SUBSAMPLE = 0
 LOGCONC = -4.0
@@ -34,7 +34,7 @@ def get_parser(description=None):
                         help="list of drug NSC IDs")
     parser.add_argument("--classify",  action="store_true",
                         help="convert the regression problem into classification based on category cutoffs")
-    parser.add_argument("--category_cutoffs", nargs='+', type=float, default=CATEGORY_CUTOFFS,
+    parser.add_argument("--cutoffs", nargs='+', type=float, default=CUTOFFS,
                         help="list of growth cutoffs (between -1 and +1) delineating response categories")
     parser.add_argument("--cv", type=int, default=CV,
                         help="cross validation folds")

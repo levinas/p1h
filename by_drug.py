@@ -47,13 +47,14 @@ def main():
         if not df.shape[0]:
             print('No response data found')
             continue
+
         summarize(df)
-        prefix = os.path.join(args.out_dir, 'NSC_' + drug)
+        out = os.path.join(args.out_dir, 'NSC_' + drug)
         for model in args.models:
             if args.classify:
-                classify(model, df, cv=args.cv, cutoffs=args.category_cutoffs, threads=args.threads, prefix=prefix)
+                classify(model, df, cv=args.cv, cutoffs=args.cutoffs, threads=args.threads, prefix=out)
             else:
-                regress(model, df, cv=args.cv, cutoffs=args.category_cutoffs, threads=args.threads, prefix=prefix)
+                regress(model, df, cv=args.cv, cutoffs=args.cutoffs, threads=args.threads, prefix=out)
 
 
 if __name__ == '__main__':

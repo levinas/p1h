@@ -15,6 +15,9 @@ from sklearn.neighbors import *
 from sklearn.svm import *
 
 with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    from sklearn.exceptions import UndefinedMetricWarning
+    warnings.filterwarnings("ignore", category=UndefinedMetricWarning)
     warnings.filterwarnings("ignore", category=DeprecationWarning)
     from xgboost import XGBRegressor
     from xgboost import XGBClassifier
@@ -90,11 +93,32 @@ def sprint_features(top_features, n_top=100):
     return str
 
 
-def discretize(y, bins=5):
-    percentiles = [100 / bins * (i + 1) for i in range(bins - 1)]
-    thresholds = [np.percentile(y, x) for x in percentiles]
-    y_discrete = np.digitize(y, thresholds)
-    return y_discrete, thresholds
+def discretize(y, bins=5, cutoffs=None, verbose=False):
+    thresholds = cutoffs
+    if thresholds is None:
+        percentiles = [100 / bins * (i + 1) for i in range(bins - 1)]
+        thresholds = [np.percentile(y, x) for x in percentiles]
+    classes = np.digitize(y, thresholds)
+    if verbose:
+        bc = np.bincount(classes)
+        min_y = np.min(y)
+        max_y = np.max(y)
+        print('Bin counts:')
+        for i, count in enumerate(bc):
+            lower = min_y if i == 0 else thresholds[i-1]
+            upper = max_y if i == len(bc)-1 else thresholds[i]
+            print('  Class {}: {:7d} ({:.4f}) - between {:+.2f} and {:+.2f}'.
+                  format(i, count, count/len(y), lower, upper))
+        # print('  Total: {:9d}'.format(len(y)))
+        print()
+    return classes, thresholds
+
+
+def categorize_dataframe(df, bins=5, cutoffs=None, verbose=False):
+    y = df.as_matrix()[:, 0]
+    classes, _ = discretize(y, bins, cutoffs, verbose)
+    df.iloc[:, 0] = classes
+    return df
 
 
 def summarize(df):
@@ -119,7 +143,7 @@ def regress(model, data, cv=5, cutoffs=None, threads=-1, prefix=''):
     best_model = None
     best_score = -np.Inf
 
-    y_discrete, thresholds = discretize(y)
+    y_discrete, _ = discretize(y)
 
     print('>', name)
     print('Cross validation:')
@@ -165,12 +189,13 @@ def classify(model, data, cv=5, cutoffs=None, threads=-1, prefix=''):
     if out_dir and not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
-    model, name = get_model(model, threads)
+    model, name = get_model(model, threads, classification=True)
     mat = data.as_matrix()
     x, y = mat[:, 1:], mat[:, 0]
     feature_labels = data.columns.tolist()[1:]
+
     if cutoffs:
-        y = np.digitize(y, cutoffs)
+        y, _ = discretize(y, cutoffs=cutoffs, verbose=True)
 
     train_scores, test_scores = [], []
     tests, preds = None, None

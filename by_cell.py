@@ -38,8 +38,15 @@ def main():
         if not df.shape[0]:
             print('No response data found')
             continue
+
+        summarize(df)
+        out = os.path.join(args.out_dir, cell)
         for model in args.models:
-            regress(model, df, cv=args.cv, threads=args.threads, prefix=os.path.join(args.out_dir, cell))
+            if args.classify:
+                classify(model, df, cv=args.cv, cutoffs=args.cutoffs, threads=args.threads, prefix=out)
+            else:
+                regress(model, df, cv=args.cv, cutoffs=args.cutoffs, threads=args.threads, prefix=out)
+
 
 
 if __name__ == '__main__':
