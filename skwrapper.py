@@ -99,8 +99,10 @@ def discretize(y, bins=5, cutoffs=None, min_count=0, verbose=False):
         percentiles = [100 / bins * (i + 1) for i in range(bins - 1)]
         thresholds = [np.percentile(y, x) for x in percentiles]
     classes = np.digitize(y, thresholds)
+    good_bins = None
     if verbose:
         bc = np.bincount(classes)
+        good_bins = len(bc)
         min_y = np.min(y)
         max_y = np.max(y)
         print('Category cutoffs: {}'.format(thresholds))
@@ -108,17 +110,19 @@ def discretize(y, bins=5, cutoffs=None, min_count=0, verbose=False):
         for i, count in enumerate(bc):
             lower = min_y if i == 0 else thresholds[i-1]
             upper = max_y if i == len(bc)-1 else thresholds[i]
-            removed = 'removed (<{})'.format(min_count) if count < min_count else ''
-            print('  Class {}: {:7d} ({:.4f}) - between {:+.2f} and {:+.2f} {}'.
+            removed = ''
+            if count < min_count:
+                removed = ' .. removed (<{})'.format(min_count)
+                good_bins -= 1
+            print('  Class {}: {:7d} ({:.4f}) - between {:+.2f} and {:+.2f}{}'.
                   format(i, count, count/len(y), lower, upper, removed))
         # print('  Total: {:9d}'.format(len(y)))
-        print()
-    return classes, thresholds
+    return classes, thresholds, good_bins
 
 
 def categorize_dataframe(df, bins=5, cutoffs=None, verbose=False):
     y = df.as_matrix()[:, 0]
-    classes, _ = discretize(y, bins, cutoffs, verbose)
+    classes, _, _ = discretize(y, bins, cutoffs, verbose)
     df.iloc[:, 0] = classes
     return df
 
@@ -126,10 +130,13 @@ def categorize_dataframe(df, bins=5, cutoffs=None, verbose=False):
 def summarize(df, cutoffs=None, min_count=0):
     mat = df.as_matrix()
     x, y = mat[:, 1:], mat[:, 0]
-    y_discrete, thresholds = discretize(y, bins=4)
+    y_discrete, thresholds, _ = discretize(y, bins=4)
     print('Quartiles of y:', ['{:.2g}'.format(t) for t in thresholds])
     if cutoffs:
-        discretize(y, cutoffs=cutoffs, min_count=min_count, verbose=True)
+        _, _, good_bins = discretize(y, cutoffs=cutoffs, min_count=min_count, verbose=True)
+    print()
+    if cutoffs:
+        return good_bins
 
 
 def regress(model, data, cv=5, cutoffs=None, threads=-1, prefix=''):
@@ -147,7 +154,7 @@ def regress(model, data, cv=5, cutoffs=None, threads=-1, prefix=''):
     best_model = None
     best_score = -np.Inf
 
-    y_even, _ = discretize(y)
+    y_even, _, _ = discretize(y)
 
     print('>', name)
     print('Cross validation:')
@@ -199,7 +206,7 @@ def classify(model, data, cv=5, cutoffs=None, threads=-1, prefix=''):
     feature_labels = data.columns.tolist()[1:]
 
     if cutoffs:
-        y, _ = discretize(y, cutoffs=cutoffs)
+        y, _, _ = discretize(y, cutoffs=cutoffs)
 
     mask = np.ones(len(y), dtype=bool)
     bc = np.bincount(y)

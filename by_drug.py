@@ -45,10 +45,17 @@ def main():
                                      use_gi50=args.use_gi50, logconc=args.logconc,
                                      subsample=args.subsample, feature_subsample=args.feature_subsample)
         if not df.shape[0]:
-            print('No response data found')
+            print('No response data found\n')
             continue
 
-        summarize(df, args.cutoffs, min_count=args.cv)
+        if args.classify:
+            good_bins = summarize(df, args.cutoffs, min_count=args.cv)
+            if good_bins < 2:
+                print('Not enough classes\n')
+                continue
+        else:
+            summarize(df, args.cutoffs)
+
         out = os.path.join(args.out_dir, 'NSC_' + drug)
         for model in args.models:
             if args.classify:
