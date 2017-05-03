@@ -263,12 +263,12 @@ def classify(model, data, cv=5, cutoffs=None, threads=-1, prefix=''):
     scores_fname = "{}.{}.scores".format(prefix, name)
     metric_names = 'accuracy_score f1_score precision_score recall_score log_loss'.split()
     with open(scores_fname, "w") as scores_file:
-        scores_file.write(score_format('accuracy_gain', accuracy_gain, eol='\n'))
+        scores_file.write(score_format('accuracy_gain', accuracy_gain, signed=True, eol='\n'))
         for m in metric_names:
             try:
                 s = getattr(metrics, m)(tests, preds)
                 print(' ', score_format(m, s))
-                scores_file.write(score_format(m, s, signed=True, eol='\n'))
+                scores_file.write(score_format(m, s, eol='\n'))
             except Exception:
                 pass
         scores_file.write('\nModel:\n{}\n\n'.format(model))
