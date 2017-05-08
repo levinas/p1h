@@ -4,8 +4,8 @@ import os
 import re
 
 from datasets import NCI60
-from skwrapper import regress
 from argparser import get_parser
+from skwrapper import regress, classify, summarize
 
 
 def test1():
@@ -45,10 +45,24 @@ def main():
                                      use_gi50=args.use_gi50, logconc=args.logconc,
                                      subsample=args.subsample, feature_subsample=args.feature_subsample)
         if not df.shape[0]:
-            print('No response data found')
+            print('No response data found\n')
             continue
+
+        if args.classify:
+            cutoffs = None if args.autobins > 1 else args.cutoffs
+            good_bins = summarize(df, cutoffs, autobins=args.autobins, min_count=args.cv)
+            if good_bins < 2:
+                print('Not enough classes\n')
+                continue
+        else:
+            summarize(df)
+
+        out = os.path.join(args.out_dir, 'NSC_' + drug)
         for model in args.models:
-            regress(model, df, cv=args.cv, threads=args.threads, prefix=os.path.join(args.out_dir, 'NSC_' + drug))
+            if args.classify:
+                classify(model, df, cv=args.cv, cutoffs=args.cutoffs, autobins=args.autobins, threads=args.threads, prefix=out)
+            else:
+                regress(model, df, cv=args.cv, cutoffs=args.cutoffs, threads=args.threads, prefix=out)
 
 
 if __name__ == '__main__':
