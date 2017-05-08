@@ -138,6 +138,18 @@ def load_drug_descriptors(ncols=None, scaling='std'):
     return df_dg
 
 
+def load_drug_smiles():
+    path = os.path.join(file_path, '..', 'ChemStructures_Consistent.smiles')
+
+    df = global_cache.get(path)
+    if df is None:
+        df = pd.read_csv(path, sep='\t', engine='c', dtype={'nsc_id':object})
+        df = df.rename(columns={'nsc_id': 'NSC'})
+        global_cache[path] = df
+
+    return df
+
+
 def load_cell_expression_u133p2(ncols=None, scaling='std'):
     """Load U133_Plus2 cell line expression data prepared by Judith,
         sub-select columns of gene expression randomly if specificed,
