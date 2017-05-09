@@ -56,7 +56,7 @@ def impute_and_scale(df, scaling='std'):
     return df
 
 
-def load_dose_response(min_logconc=-5., max_logconc=-5., subsample=None, fraction=False):
+def load_dose_response(min_logconc=-4., max_logconc=-4., subsample=None, fraction=False):
     """Load cell line response to different drug compounds, sub-select response for a specific
         drug log concentration range and return a pandas dataframe.
 

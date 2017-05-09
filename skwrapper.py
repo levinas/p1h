@@ -24,7 +24,7 @@ with warnings.catch_warnings():
 
 def get_model(model_or_name, threads=-1, classification=False):
     regression_models = {
-        'xgboost': (XGBRegressor(nthread=threads), 'XGBRegressor'),
+        'xgboost': (XGBRegressor(max_depth=6, n_estimators=100, nthread=threads), 'XGBRegressor'),
         'randomforest': (RandomForestRegressor(n_estimators=100, n_jobs=threads), 'RandomForestRegressor'),
         'adaboost': (AdaBoostRegressor(), 'AdaBoostRegressor'),
         'linear': (LinearRegression(), 'LinearRegression'),
@@ -32,9 +32,9 @@ def get_model(model_or_name, threads=-1, classification=False):
         'lasso': (LassoCV(positive=True), 'LassoCV'),
         'ridge': (Ridge(), 'Ridge'),
 
-        'xgb.1k': (XGBRegressor(n_estimators=1000, nthread=threads), 'XGBRegressor.1K'),
+        'xgb.1k': (XGBRegressor(max_depth=6, n_estimators=1000, nthread=threads), 'XGBRegressor.1K'),
+        'xgb.10k': (XGBRegressor(max_depth=6, n_estimators=10000, nthread=threads), 'XGBRegressor.10K'),
         'rf.1k': (RandomForestRegressor(n_estimators=1000, n_jobs=threads), 'RandomForestRegressor.1K'),
-        'xgb.10k': (XGBRegressor(n_estimators=10000, nthread=threads), 'XGBRegressor.10K'),
         'rf.10k': (RandomForestRegressor(n_estimators=10000, n_jobs=threads), 'RandomForestRegressor.10K')
     }
 

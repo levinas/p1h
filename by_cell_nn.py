@@ -155,12 +155,15 @@ def train_nn_model(df, args):
 
     # model.add(RepeatVector(maxlen))
     # for _ in range(args.layers):
-    #     model.add(LSTM(args.latent_dim, return_sequences=True))
+        # model.add(LSTM(args.latent_dim, return_sequences=True))
 
     # model.add(TimeDistributed(Dense(charlen)))
     # model.add(Activation('softmax'))
-    model.add(Dropout(args.dropout))
+    # model.add(Dropout(args.dropout))
+    # model.add(TimeDistributed(Dense(charlen, activation='softmax')))
+
     model.add(Dense(1, activation='sigmoid'))
+    model.summary()
 
     model.compile(loss='mse', optimizer=args.optimizer)
 
