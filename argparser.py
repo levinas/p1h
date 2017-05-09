@@ -56,7 +56,7 @@ def get_parser(description=None):
     parser.add_argument("--subsample", default=SUBSAMPLE, metavar='SUBSAMPLE',
                         choices=['naive_balancing', 'none'],
                         help="dose response subsample strategy; 'none' or 'naive_balancing'")
-    parser.add_argument("--threads", default=THREADS,
+    parser.add_argument("--threads", type=int, default=THREADS,
                         help="number of threads per machine learning training job; -1 for using all threads")
     parser.add_argument("-o", "--out_dir", default=OUT_DIR,
                         help="output directory")

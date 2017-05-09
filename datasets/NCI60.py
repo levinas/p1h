@@ -56,15 +56,15 @@ def impute_and_scale(df, scaling='std'):
     return df
 
 
-def load_dose_response(min_logconc=-5., max_logconc=-5., subsample=None, fraction=False):
+def load_dose_response(min_logconc=-4., max_logconc=-4., subsample=None, fraction=False):
     """Load cell line response to different drug compounds, sub-select response for a specific
         drug log concentration range and return a pandas dataframe.
 
     Parameters
     ----------
-    min_logconc : -3, -4, -5, -6, -7, optional (default -5)
+    min_logconc : -3, -4, -5, -6, -7, optional (default -4)
         min log concentration of drug to return cell line growth
-    max_logconc : -3, -4, -5, -6, -7, optional (default -5)
+    max_logconc : -3, -4, -5, -6, -7, optional (default -4)
         max log concentration of drug to return cell line growth
     subsample: None, 'naive_balancing' (default None)
         subsampling strategy to use to balance the data based on growth
@@ -412,7 +412,7 @@ def load_by_cell_data(cell='BR:MCF7', drug_features=['descriptors'], shuffle=Tru
     if 'all' in drug_features:
         drug_features = ['descriptors', 'latent']
 
-    df_resp = load_dose_response(subsample=subsample, fraction=True)
+    df_resp = load_dose_response(subsample=subsample, min_logconc=min_logconc, max_logconc=max_logconc, fraction=True)
 
     df = df_resp[df_resp['CELLNAME'] == cell].reset_index()
     df = df[['NSC', 'GROWTH', 'LOG_CONCENTRATION']]
