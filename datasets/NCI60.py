@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import collections
 import os
+import re
 import sys
 
 import numpy as np
@@ -54,6 +55,25 @@ def impute_and_scale(df, scaling='std'):
     df = pd.DataFrame(mat, columns=df.columns)
 
     return df
+
+
+def describe_response_data(df, cells=['all'], drugs=['A'], doses=[-5, -4]):
+    if 'all' in cells or cells == 'all':
+        cells = all_cells()
+    if 'all' in drugs or drugs == 'all':
+        drugs = all_drugs()
+    elif len(drugs) == 1 and re.match("^[ABC]$", drugs[0].upper()):
+        drugs = drugs_in_set('Jason:' + drugs[0].upper())
+
+    print('cells:', cells)
+    print('drugs:', drugs)
+
+    lconc = -4
+    for cell in cells:
+        d = df[(df['CELLNAME'] == cell) & (df['LOG_CONCENTRATION'] == lconc)]
+        print(cell)
+        print(d.describe())
+        break
 
 
 def load_dose_response(min_logconc=-4., max_logconc=-4., subsample=None, fraction=False):
